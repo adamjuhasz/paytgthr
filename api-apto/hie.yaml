@@ -1,0 +1,7 @@
+# https://github.com/mpickering/hie-bios#stack
+cradle:
+  stack:
+    - path: "./src"
+      component: "api-apto:lib"
+    - path: "./test"
+      component: "api-apto:test:api-apto-test"

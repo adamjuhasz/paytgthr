@@ -1,0 +1,40 @@
+name: Shared Haskell
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "shared-haskell/**/*.hs"
+      - "shared-haskell/*.yaml"
+
+jobs:
+  unit-test:
+    name: "Unit Test"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup stack
+        uses: haskell/actions/setup@v1
+        with:
+          enable-stack: true
+          stack-version: "latest"
+
+      - name: Cache stack
+        uses: actions/cache@v1
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-${{ hashFiles('shared-haskell/package.yaml') }}-${{ hashFiles('shared-haskell/stack.yaml') }}
+
+      - name: Cache shared-haskell
+        uses: actions/cache@v1
+        with:
+          path: ~/work/monorepo/monorepo/shared-haskell/.stack-work
+          key: ${{ runner.os }}-${{ hashFiles('shared-haskell/package.yaml') }}-shared-haskell-test
+
+      - name: Shared Library
+        working-directory: shared-haskell
+        run: |
+          stack test --pedantic

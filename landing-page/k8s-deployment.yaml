@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: landing-page
+spec:
+  selector:
+    matchLabels:
+      app: landing-page
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: landing-page
+        affinityhash: "landing-page"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "affinityhash"
+                    operator: In
+                    values:
+                      - "landing-page"
+              topologyKey: kubernetes.io/hostname
+      serviceAccountName: landing-page
+      volumes:
+        - name: vault-token
+          emptyDir:
+            medium: Memory
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: vault-agent-auth
+          image: vault:1.2.3
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          env:
+            - name: VAULT_ADDR
+              value: "https://vault.default.svc.cluster.local:8200"
+            - name: ROLE
+              value: "landing-page"
+            - name: VAULT_SKIP_VERIFY
+              value: "true"
+          command:
+            [
+              "sh",
+              "-c",
+              "mkdir /etc/vault && echo -e \"exit_after_auth = false\npid_file = \\\"/home/vault/pidfile\\\"\n\nauto_auth {\n  method \\\"kubernetes\\\" {\n    mount_path = \\\"auth/kubernetes\\\"\n    config = {\n      role = \\\"$ROLE\\\"\n    }\n  }\n  sink \\\"file\\\" {\n    config = {\n      path = \\\"/home/app/vault/.vault-token\\\"\n    }\n  }\n}\n\" > /etc/vault/vault-agent-config.hcl && cat /etc/vault/vault-agent-config.hcl && vault agent -config=/etc/vault/vault-agent-config.hcl -log-level=debug",
+            ]
+          resources:
+            requests:
+              memory: "40Mi"
+              cpu: "20m"
+            limits:
+              memory: "150Mi"
+              cpu: "500m"
+        - name: token-chmod
+          image: busybox:1.31.0
+          command:
+            [
+              "sh",
+              "-c",
+              "while true; do chmod 444 /home/app/vault/.vault-token; sleep 1; done && tail -f /dev/null",
+            ]
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          resources:
+            requests:
+              memory: "1Mi"
+              cpu: "30m"
+            limits:
+              memory: "20Mi"
+              cpu: "500m"
+        - name: landing-page
+          image: us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/landing-page:master
+          command: ["/home/app/haskell-exe"]
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "110m"
+            limits:
+              memory: "1000Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 3000
+          env:
+            - name: "AMQP_BASE"
+              value: "rhinelander-rabbitmq-ha.default.svc.cluster.local:5672"
+            - name: "RMQ_ROLE"
+              value: "generalrw-role"
+            - name: VAULT_BASE
+              value: "https://vault.default.svc.cluster.local:8200"
+            - name: TOKEN_FILE_LOCATION
+              value: "/home/app/vault/.vault-token"
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              port: 3000
+              path: /healthy
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 4
+            successThreshold: 2
+            failureThreshold: 3

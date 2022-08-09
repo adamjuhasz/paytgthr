@@ -1,0 +1,58 @@
+name: Alfie CI
+
+on:
+  push:
+    branches:
+      - master
+      - release-app
+      - staging
+    paths:
+      - "alfie/**"
+  pull_request:
+    branches:
+      - master
+      - release-app
+    paths:
+      - "alfie/**"
+
+jobs:
+  alfieTest:
+    runs-on: ubuntu-20.04 #macos-latest
+    timeout-minutes: 60
+
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_11.2.app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Cache node modules
+        uses: actions/cache@v1
+        id: cache
+        with:
+          path: alfie/node_modules
+          key: node-modules-${{ hashFiles('alfie/yarn.lock') }}
+
+      - name: Install Dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          cd alfie
+          yarn install
+
+      - name: typescript type check
+        run: |
+          cd alfie
+          yarn run typecheck
+
+      - name: eslint
+        run: |
+          cd alfie
+          yarn run lint
+
+      - name: unit tests
+        run: |
+          cd alfie
+          yarn test

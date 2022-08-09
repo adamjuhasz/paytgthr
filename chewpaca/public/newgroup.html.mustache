@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css"
+      crossorigin="anonymous"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/">Chewpaca</a></li>
+          <li><a href="/groups">Group</a></li>
+          <li class="is-active">
+            <a href="#" aria-current="page">Create group</a>
+          </li>
+        </ul>
+      </nav>
+      <section class="section">
+        <h2 class="is-size-1">Group Info</h2>
+        <form method="POST" action="/group/new">
+          <h3>First person</h3>
+          <label for="email1">Email</label>
+          <input type="text" id="email1" name="email1" />
+          <label for="email">First Name</label>
+          <input type="text" id="fname1" name="fname1" />
+          <h3>Second person</h3>
+          <label for="email">Email</label>
+          <input type="text" id="email2" name="email2" />
+          <label for="email">First Name</label>
+          <input type="text" id="fname2" name="fname2" />
+          <button class="button" type="submit">Create</button>
+        </form>
+      </section>
+    </div>
+    {{> currency-js}}
+  </body>
+</html>

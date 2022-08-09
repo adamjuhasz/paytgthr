@@ -1,0 +1,212 @@
+steps:
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        # File that contains failures.
+        echo "repo: $REPO_NAME"
+        echo "branch: ${BRANCH_NAME}"
+        echo "sha: ${COMMIT_SHA}"
+        echo "ssha: $SHORT_SHA"
+        echo "tag: ${TAG_NAME}"
+        echo "rev: $REVISION_ID"
+        echo "build: $BUILD_ID"
+        echo "pr: $_PR_NUMBER"
+  - id: "prework"
+    name: "gcr.io/cloud-builders/git"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        # Pull master from the upstream GoogleCloudPlatform/cloud-builders-community repository
+        mkdir .SCRATCH
+        git clone https://source.developers.google.com/p/infra-tgthr/r/github_paytgthr_monorepo .SCRATCH/monorepo
+        touch build_plan.list
+        cd .SCRATCH/monorepo
+
+        if [[ "$BRANCH_NAME" == "master" ]]; then
+          lastcommit=$(git log --format=%H -n 1 HEAD^2)
+          list=$(git diff --name-only HEAD^ HEAD | sed 's#/[^/]*$##' | awk '!x[$0]++' | grep -v "cloudbuild.yaml")
+        elif [[ "$BRANCH_NAME" == "staging" ]]; then
+          git checkout $BRANCH_NAME
+          lastcommit=$(git log --format=%H -n 1 HEAD^2)
+          list=$(git diff --name-only HEAD^ HEAD | sed 's#/[^/]*$##' | awk '!x[$0]++' | grep -v "cloudbuild.yaml")
+        else
+          git checkout "$BRANCH_NAME"
+          lastcommit=$(git log --format=%H -n 1 HEAD^1)
+          # sed remove filename
+          # awk: ???
+          # grep: remove cloudbuild changes
+          list=$(git diff --name-only master | sed 's#/[^/]*$##' | awk '!x[$0]++' | grep -v "cloudbuild.yaml")
+        fi
+
+        cd ../..
+
+        echo "$list" | tee -a build_plan.list
+        sublist=$(cat build_plan.list | sed 's#/[^/]*$##')
+        firstlevel=$(cat build_plan.list | cut -d/ -f1)
+        echo -e "$list\n$sublist\n$firstlevel" | sort | uniq > build_plan.list
+
+        touch deps.list
+        while read d; do
+          echo "looking for dep in ${d}"
+          deps="${d}/.dependents"
+          if [[ ! -f "${deps}" ]]; then
+            echo "failed to find dep in ${deps}"
+            continue
+          fi
+          cat ${deps} >> deps.list
+        done <build_plan.list
+        cat deps.list >> build_plan.list
+        mv build_plan.list bp.list && cat bp.list | sort | uniq > build_plan.list
+
+        echo "$lastcommit" | tee -a commit.sha
+        echo "-= build_plan.list =-"
+        echo "BUILD PLAN:"
+        cat build_plan.list
+        echo "---"
+        # clean up the scratch directory.
+        # shouldn't really be necessary as the whole workspace will be discarded.
+        rm -rf .SCRATCH
+  - id: "build"
+    name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        # File that contains failures.
+        failure_file=failure.log
+        lastcommit=$(cat commit.sha)
+        touch ${failure_file}
+        echo "repo: $BRANCH_NAME"
+        # Loop through the builders, and build independently.
+        while read d; do
+          config="${d}/cloudbuild.yaml"
+          if [[ ! -f "${config}" ]]; then
+            # echo "${d} failed: ${config} not found."
+            continue
+          fi
+          echo "Building $d ... "
+          (
+            logfile="${d::-1}.log" # Logfile for "foo/" builder is "foo.log".
+            project=$(echo "$d" | grep -Eo '[^/]+/?$' | cut -d / -f1)
+            gcloud builds submit . --config=${config} --substitutions BRANCH_NAME=${BRANCH_NAME},COMMIT_SHA=${COMMIT_SHA},SHORT_SHA=${SHORT_SHA},TAG_NAME=${TAG_NAME},REVISION_ID=${REVISION_ID},REPO_NAME=${REPO_NAME},_PR_NUMBER=${_PR_NUMBER},_PROJECT=${project},_SOURCE_LOC=${d},_CACHE_SHA=${lastcommit} > ${logfile} 2>&1
+            if [[ $? -ne 0 ]]; then
+              echo "$d failed" | tee -a ${failure_file}
+              cat ${logfile}
+            fi
+          ) &
+        done <build_plan.list
+        wait
+        # Check if there is any failure.
+        if [[ -s ${failure_file} ]]; then
+          echo
+          echo "Some builds failed:"
+          cat ${failure_file}
+          echo "Exiting."
+          exit 1
+        fi
+        echo "All builds succeeded."
+  # - id: "integration testing"
+  #   name: "gcr.io/infra-tgthr/docker-compose:1.16.1"
+  #   entrypoint: "bash"
+  #   env:
+  #     - "BRANCH=${BRANCH_NAME}"
+  #   args:
+  #     - "-c"
+  #     - |
+  #       lastcommit=$(cat ./commit.sha)
+
+  #       while read d; do
+  #         config="${d}/cloudbuild.yaml"
+  #         if [[ ! -f "${config}" ]]; then
+  #           # echo "${d} failed: ${config} not found."
+  #           continue
+  #         fi
+  #         project=$(echo "$d" | grep -Eo '[^/]+/?$' | cut -d / -f1)
+  #         echo "Adding latest image from $project ... "
+
+  #         echo -e "\n  $project:\n    image: \"us.gcr.io/$PROJECT_ID/${project}:${SHORT_SHA}\"\n" >> integration_tests/docker-compose.cloudbuild.yaml
+  #         cat integration_tests/docker-compose.cloudbuild.yaml
+  #         echo "======"
+
+  #       done <build_plan.list
+
+  #       cd integration_tests
+  #       echo "final cloudbuild:"
+  #       cat docker-compose.cloudbuild.yaml
+  #       ./local.sh
+  - id: "deploy"
+    name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        env="none"
+        if [[ "$BRANCH_NAME" == "master" ]]; then
+          gcloud container clusters get-credentials --region "$_K8S_PROD_CLUSTER_REGION" "$_K8S_PROD_CLUSTER_NAME"
+          env="production"
+          sed -i "s,paytgthr-dev,paytgthr-com,g" infrastructure/k8s.yaml
+          sed -i "s,paytgthr\.dev,paytgthr.com,g" infrastructure/k8s.yaml
+        elif [[ "$BRANCH_NAME" == "staging" ]]; then
+          gcloud container clusters get-credentials --region "$_K8S_STAGING_CLUSTER_REGION" "$_K8S_STAGING_CLUSTER_NAME"
+          sed -i "s,paytgthr-dev,paytgthr-dev,g" infrastructure/k8s.yaml
+          sed -i "s,paytgthr\.dev,paytgthr.dev,g" infrastructure/k8s.yaml
+          env="staging"
+        fi
+
+        kubectl config current-context
+
+        if [[ "$BRANCH_NAME" == "master" ]] || [[ "$BRANCH_NAME" == "staging" ]]; then
+          while read d; do
+            # config="${d}/cloudbuild.yaml"
+            # if [[ ! -f "${config}" ]]; then
+            #   # echo "${d} failed: ${config} not found."
+            #   continue
+            # fi
+            k8sstaging="${d}/k8s.staging.yaml"
+            if [[ "$BRANCH_NAME" == "staging" ]] && [[ -f "${k8sstaging}" ]]; then
+              project=$(echo "$d" | grep -Eo '[^/]+/?$' | cut -d / -f1)
+              echo "Deploying $BRANCH_NAME $project to $env... "
+              sed -i "s,IMAGE_NAME,us.gcr.io/$PROJECT_ID/${project}:${SHORT_SHA},g" ${k8sstaging}
+              sed -i "s,IMAGE_VERSION,${SHORT_SHA},g" ${k8sstaging}
+              kubectl apply -f ${k8sstaging}
+              echo "========================================"
+            fi
+
+            k8sproduction="${d}/k8s.production.yaml"
+            if [[ "$BRANCH_NAME" == "master" ]] && [[ -f "${k8sproduction}" ]]; then
+              project=$(echo "$d" | grep -Eo '[^/]+/?$' | cut -d / -f1)
+              echo "Deploying $BRANCH_NAME $project to $env... "
+              sed -i "s,IMAGE_NAME,us.gcr.io/$PROJECT_ID/${project}:${SHORT_SHA},g" ${k8sproduction}
+              sed -i "s,IMAGE_VERSION,${SHORT_SHA},g" ${k8sproduction}
+              kubectl apply -f ${k8sproduction}
+              echo "========================================"
+            fi
+
+            k8syaml="${d}/k8s.yaml"
+            if [[ ! -f "${k8syaml}" ]]; then
+              echo "${d} failed: ${k8syaml} not found."
+              continue
+            else
+              project=$(echo "$d" | grep -Eo '[^/]+/?$' | cut -d / -f1)
+              echo "Deploying $project from $BRANCH_NAME to $env... "
+              sed -i "s,IMAGE_NAME,us.gcr.io/$PROJECT_ID/${project}:${SHORT_SHA},g" ${k8syaml}
+              sed -i "s,IMAGE_VERSION,${SHORT_SHA},g" ${k8syaml}
+              cat ${k8syaml}
+              kubectl apply -f ${k8syaml}
+              echo "========================================"
+            fi
+            
+          done <build_plan.list
+        else
+          echo "Not deployable branch, no deployment"
+        fi
+timeout: 7200s
+substitutions:
+  _K8S_PROD_CLUSTER_REGION: "us-central1"
+  _K8S_PROD_CLUSTER_NAME: "ha-safari"
+  _K8S_STAGING_CLUSTER_REGION: "us-west1"
+  _K8S_STAGING_CLUSTER_NAME: "ha-pettingzoo"
+# tags: ["$_PR_NUMBER", "$_REPO_OWNER", "$_REPO", "$_SHA"]

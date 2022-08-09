@@ -1,0 +1,147 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: "Payment-Auth"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/payment-auth.yaml"
+      - "payment-auth/**"
+      - "shared-haskell/lib/**"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/payment-auth.yaml"
+      - "payment-auth/**"
+      - "shared-haskell/lib/**"
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: ha-safari # Add your cluster name here.
+  GKE_ZONE: us-central1 # Add your cluster zone here.
+  DEPLOYMENT_NAME: payment-auth # Add your deployment name here
+  IMAGE: payment-auth
+  IMAGE_TAG: ${{  GITHUB.SHA }}
+
+jobs:
+  setup-build-publish:
+    name: Build, Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Setup gcloud CLI
+      - uses: google-github-actions/setup-gcloud@94337306dda8180d967a56932ceb4ddcf01edae7
+        with:
+          service_account_key: ${{ secrets.GKE_SA_KEY }}
+          project_id: ${{ secrets.GKE_PROJECT }}
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - run: |-
+          gcloud auth configure-docker
+
+      - name: Login to GAR
+        uses: docker/login-action@v1
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY }}
+
+      # Get the GKE credentials so we can deploy to the cluster
+      - uses: google-github-actions/get-gke-credentials@fb08709ba27618c31c09e014e1d8364b02e5042e
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+          credentials: ${{ secrets.GKE_SA_KEY }}
+
+      # Build the Docker image
+      - name: Kaniko build
+        uses: aevea/action-kaniko@master
+        with:
+          registry: ghcr.io
+          image: paytgthr/payment-auth
+          tag: ${{ GITHUB.SHA }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          cache: true
+          extra_args: --build-arg=sourcedir=payment-auth
+          build_file: dockerfiles/ubuntu-stack.dockerfile
+          cache_ttl: 7200h
+
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Push the Docker image to Google Container Registry
+      - name: Publish
+        run: |-
+          docker pull "ghcr.io/paytgthr/monorepo/paytgthr/payment-auth:$GITHUB_SHA"
+          docker tag "ghcr.io/paytgthr/monorepo/paytgthr/payment-auth:$GITHUB_SHA" "us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/$IMAGE:$GITHUB_SHA"
+          docker push "us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/$IMAGE:$GITHUB_SHA"
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    name: Deploy GKE
+    needs: setup-build-publish
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Get the GKE credentials so we can deploy to the cluster
+      - uses: google-github-actions/get-gke-credentials@fb08709ba27618c31c09e014e1d8364b02e5042e
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+          credentials: ${{ secrets.GKE_SA_KEY }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to GAR
+        uses: docker/login-action@v1
+        with:
+          registry: us-central1-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCR_JSON_KEY }}
+
+      - name: Publish
+        run: |-
+          docker pull "ghcr.io/paytgthr/monorepo/paytgthr/$IMAGE:$GITHUB_SHA" 
+          docker tag "ghcr.io/paytgthr/monorepo/paytgthr/$IMAGE:$GITHUB_SHA" "us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/$IMAGE:master"
+          docker push "us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/$IMAGE:master"
+
+      # Set up kustomize
+      - name: Set up Kustomize
+        working-directory: payment-auth
+        run: |-
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
+          chmod u+x ./kustomize
+
+      # Deploy the Docker image to the GKE cluster
+      - name: Deploy
+        working-directory: payment-auth
+        run: |-
+          ./kustomize edit set image "us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/$IMAGE:$GITHUB_SHA"
+          cat kustomization.yaml
+          ./kustomize build .
+          ./kustomize build . | kubectl apply -f -
+          kubectl rollout status deployment/$DEPLOYMENT_NAME
+          kubectl get deployments -o wide

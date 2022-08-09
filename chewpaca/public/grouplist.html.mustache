@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/">Chewpaca</a></li>
+          <li class="is-active"><a href="#" aria-current="page">Groups</a></li>
+        </ul>
+      </nav>
+      <section class="section">
+        <table class="table is-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Last Update</th>
+              <th>Revisions</th>
+              <th>Status</th>
+              <th>Members</th>
+              <th>Split</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#groups}}
+              <tr>
+                <th class="is-family-code"><a href="/group/{{id}}">{{id}}</a></th>
+                <td class="timeago" datetime="{{created_at}}">{{created_at}}</td>
+                <td>{{revision}}</td>
+                <td>{{status}}</td>
+                <td>{{#members}} <a href="/user?id={{user}}"> ({{accepted}}) {{user}}</a><br>{{/members}}</td>
+                <td>{{#split}} <a href="/user?id={{user}}">({{approved}}) {{user}} </a><br>{{/split}}</td>
+              </tr>
+            {{/groups}}
+          </tbody>
+        </table>
+      </section>
+    </div>
+    {{> currency-js}}
+  </body>
+</html>

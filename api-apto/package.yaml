@@ -1,0 +1,104 @@
+name: api-apto
+version: 0.1.0.0
+github: "githubuser/api-apto"
+license: BSD3
+author: "Author name here"
+maintainer: "example@example.com"
+copyright: "2019 Author name here"
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - amqp
+  - async
+  - base64-bytestring
+  - bytestring
+  - case-insensitive
+  - connection
+  - ekg
+  - ekg-core
+  - errors
+  - exceptions
+  - fast-logger
+  - http2
+  - http-client
+  - http-client-tls
+  - http-types
+  - jwt
+  - lifted-base
+  - load-env
+  - mtl
+  - network
+  - once
+  - postgresql-simple
+  - pretty-simple
+  - resource-pool
+  - random
+  - random-shuffle
+  - raw-strings-qq
+  - regex-tdfa
+  - retry
+  - safe-money
+  - scotty
+  - servant
+  - servant-client
+  - servant-client-core
+  - servant-server
+  - text
+  - time
+  - transformers
+  - unix
+  - unordered-containers
+  - uuid
+  - vault
+  - vector
+  - wai
+  - wai-extra
+  - warp
+  - warp-tls
+  # test
+  - hspec
+  - hspec-wai
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
+
+default-extensions:
+  - OverloadedStrings
+  - ScopedTypeVariables
+  - TupleSections
+  - LambdaCase
+  - MultiWayIf
+  - StrictData
+
+library:
+  source-dirs:
+    - src
+    - ../shared-haskell/lib
+
+executables:
+  api-apto-exe:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -fwarn-unused-imports
+    dependencies:
+      - api-apto
+
+tests:
+  api-apto-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - api-apto

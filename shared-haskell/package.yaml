@@ -1,0 +1,234 @@
+name: shared
+version: 0.1.0.0
+github: "paytgthr/monorepo"
+license: AllRightsReserved
+author: "Pay Tgthr, Inc"
+maintainer: "hi@paytgthr.com"
+copyright: "2019 Pay Tgthr, Inc"
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - aeson-pretty
+  - argon2
+  - async
+  - amqp
+  - base16-bytestring
+  - base64-bytestring
+  - blaze-html
+  - blaze-markup
+  - blaze-svg
+  - bytestring
+  - case-insensitive
+  - cassava
+  - clientsession
+  - connection
+  - containers
+  - cookie ==0.4.5
+  - cryptohash-md5
+  - cryptonite
+  - cryptostore
+  - Decimal
+  - directory
+  - exceptions
+  - ekg
+  - ekg-core
+  - errors
+  - fast-logger
+  - HandsomeSoup
+  - hashids
+  - hspec
+  - http2
+  - http-client
+  - http-client-tls
+  - http-types
+  - hxt
+  - human-readable-duration
+  - jwt
+  - lifted-async
+  - lifted-base
+  - load-env
+  - memory
+  - mtl
+  - once
+  - postgresql-simple
+  - pretty-simple
+  - QuasiText
+  - random
+  - random-shuffle
+  - raw-strings-qq
+  - regex-tdfa
+  - resource-pool
+  - retry
+  - safe-money
+  - scotty
+  - servant
+  - servant-server
+  - servant-client
+  - servant-client-core
+  - stache
+  - text
+  - text-short
+  - time
+  - transformers
+  - unix
+  - unordered-containers
+  - uuid
+  - vault
+  - vector
+  - wai
+  - wai-cors
+  - wai-extra
+  - wai-middleware-static
+  - warp
+  - warp-tls
+  - x509
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
+
+default-extensions:
+  - OverloadedStrings
+  - ScopedTypeVariables
+  - TupleSections
+  - LambdaCase
+  - MultiWayIf
+  - RecordWildCards
+  - StrictData
+
+library:
+  source-dirs:
+    - lib
+    - db
+    - ../accounts-fsm/src
+    - ../api-apto/src
+    - ../api-dwolla/src
+    - ../api-privacy/src
+    - ../auditor/src
+    - ../chewpaca/src
+    - ../landing-page/src
+    - ../mailer/src
+    - ../payment-auth/src
+
+executables:
+  shared-exe:
+    main: Main.hs
+    source-dirs:
+      - app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -with-rtsopts=-T
+      - -fwarn-unused-imports
+    dependencies:
+      - shared
+
+tests:
+  shared-test:
+    main: Spec.hs
+    source-dirs:
+      - test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - shared
+
+  accounts-test:
+    main: Spec.hs
+    source-dirs:
+      - ../accounts-fsm/test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - shared
+
+  # figure out working directory
+  # apto-test:
+  #   main: Spec.hs
+  #   source-dirs:
+  #     - ../api-apto/test
+  #   ghc-options:
+  #     - -threaded
+  #     - -rtsopts
+  #     - -with-rtsopts=-N
+  #   dependencies:
+  #     - shared
+
+  dwolla-test:
+    main: Spec.hs
+    source-dirs:
+      - ../api-dwolla/test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - shared
+
+  auditor-test:
+    main: Spec.hs
+    source-dirs:
+      - ../auditor/test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - shared
+
+  chewpaca-test:
+    main: Spec.hs
+    source-dirs:
+      - ../chewpaca/test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - shared
+
+  # figure out working directory
+  landing-page-test:
+    main: Spec.hs
+    source-dirs:
+      - ../landing-page/test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - shared
+      - hspec-wai
+
+  mailer-test:
+    main: Spec.hs
+    source-dirs:
+      - ../mailer/test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - shared
+
+  # figure out working directory
+  payment-auth-test:
+    main: Spec.hs
+    source-dirs:
+      - ../payment-auth/test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - shared
+      - hspec-wai

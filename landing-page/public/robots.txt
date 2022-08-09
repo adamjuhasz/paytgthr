@@ -1,0 +1,7 @@
+Sitemap: https://paytgthr.com/sitemap.xml
+User-agent: *
+Disallow: /app/signup/
+Disallow: /app/change/
+Disallow: /app/login/
+Disallow: /legal
+Disallow: /cdn-cgi

@@ -1,0 +1,7 @@
+# https://github.com/mpickering/hie-bios#stack
+cradle:
+  stack:
+    - path: "./src"
+      component: "api-dwolla:lib"
+    - path: "./test"
+      component: "api-dwolla:test:api-dwolla-test"

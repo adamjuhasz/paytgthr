@@ -1,0 +1,10 @@
+.stack-work/
+api-privacy.cabal
+*~
+*.hp
+*.prof
+
+#secrets
+.env
+.vault-token
+amqp_conn_string

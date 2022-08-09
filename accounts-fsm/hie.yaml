@@ -1,0 +1,9 @@
+# https://github.com/mpickering/hie-bios#stack
+cradle:
+  stack:
+    - path: "./src"
+      component: "accounts-fsm:lib"
+    - path: "./test"
+      component: "accounts-fsm:test:accounts-fsm-test"
+    - path: "./app"
+      component: "accounts-fsm:exe:accounts-fsm-exe"

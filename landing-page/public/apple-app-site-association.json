@@ -1,0 +1,22 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "2ZG8V3KUG2.com.paytgthr.alfie",
+        "paths": [
+          "NOT /legal/*",
+          "NOT /getapp",
+          "NOT /l/*",
+          "NOT /statements/*",
+          "NOT /web/*",
+          "NOT /blog/*",
+          "/app/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["2ZG8V3KUG2.com.paytgthr.alfie"]
+  }
+}

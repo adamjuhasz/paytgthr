@@ -1,0 +1,94 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: weekly-purchase-reports
+spec:
+  schedule: "01 7 * * 5"
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          containers:
+            - name: wget
+              image: cirrusci/wget
+              args:
+                - wget
+                - --method=POST
+                - --read-timeout=3600
+                - --tries=1
+                - --verbose
+                - http://chewpaca-iap-service.default.svc.cluster.local/reports/weekly/users
+          restartPolicy: Never
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: daily-purchase-reports
+spec:
+  schedule: "01 7 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          containers:
+            - name: wget
+              image: cirrusci/wget
+              args:
+                - wget
+                - --method=POST
+                - --read-timeout=3600
+                - --connect-timeout=3600
+                - --tries=1
+                - --verbose
+                - http://chewpaca-iap-service.default.svc.cluster.local/reports/daily/users
+          restartPolicy: Never
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: daily-refresh-plaid-balances
+spec:
+  schedule: "15 10 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          containers:
+            - name: wget
+              image: cirrusci/wget
+              args:
+                - wget
+                - --method=POST
+                - --read-timeout=3600
+                - --connect-timeout=3600
+                - --tries=1
+                - --verbose
+                - http://chewpaca-iap-service.default.svc.cluster.local/send/runactivebalances
+          restartPolicy: Never
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: daily-garbagecollect-ledger
+spec:
+  schedule: "1 20 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          containers:
+            - name: wget
+              image: cirrusci/wget
+              args:
+                - wget
+                - --method=POST
+                - --read-timeout=3600
+                - --connect-timeout=3600
+                - --tries=1
+                - --verbose
+                - http://chewpaca-iap-service.default.svc.cluster.local/send/runledgergc
+          restartPolicy: Never

@@ -1,0 +1,121 @@
+name: payment-auth
+version: 0.1.0.0
+github: "paytgthr/monorepo"
+license: UNLICENSED
+author: "Pay Tgthr, Inc"
+maintainer: "hi@example.com"
+copyright: "2019 Pay Tgthr, Inc"
+
+extra-source-files:
+  - README.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description: Please see the README on GitHub at <https://github.com/paytgthr/monorepo/payment-auth#readme>
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - async
+  - amqp
+  - base64-bytestring
+  - bytestring
+  - case-insensitive
+  - connection
+  - containers
+  - Decimal
+  - ekg
+  - ekg-core
+  - errors
+  - exceptions
+  - fast-logger
+  - http2
+  - http-client
+  - http-client-tls
+  - http-types
+  - jwt
+  - lifted-async
+  - lifted-base
+  - load-env
+  - mtl
+  - network
+  - once
+  - postgresql-simple
+  - pretty-simple
+  - random
+  - raw-strings-qq
+  - regex-tdfa
+  - resource-pool
+  - retry
+  - scotty
+  - servant
+  - servant-client
+  - servant-client-core
+  - servant-server
+  - text
+  - time
+  - transformers
+  - unix
+  - unordered-containers
+  - uuid
+  - vault
+  - vector
+  - wai
+  - wai-extra
+  - warp
+  - warp-tls
+  # test
+  - hspec
+  - hspec-discover
+  - hspec-wai
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
+
+default-extensions:
+  - OverloadedStrings
+  - ScopedTypeVariables
+  - TupleSections
+  - LambdaCase
+  - MultiWayIf
+  - StrictData
+
+library:
+  source-dirs:
+    - src
+    - ../shared-haskell/lib
+    - ../shared-haskell/db
+
+executables:
+  payment-auth-exe:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+      - -with-rtsopts=-T
+      - -fwarn-unused-imports
+    dependencies:
+      - payment-auth
+
+tests:
+  payment-auth-test:
+    main: Spec.hs
+    source-dirs:
+      - test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - payment-auth

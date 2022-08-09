@@ -1,0 +1,54 @@
+name: React Native
+
+on: [push]
+
+jobs:
+  release-ios:
+    name: Build iOS app
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-alfie-${{ hashFiles('**/alfie/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-alfie-${{ hashFiles('**/alfie/yarn.lock') }}
+            ${{ runner.os }}-alfie-
+      - name: Install fastlane
+        run: brew install fastlane
+      - name: Install packages
+        run: yarn install
+        working-directory: ./alfie
+      - name: Test code
+        run: yarn run test
+        working-directory: ./alfie
+      - name: Lint code
+        run: yarn run lint
+        working-directory: ./alfie
+
+  release-android:
+    name: Build Android app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Cache node modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.os }}-alfie-${{ hashFiles('**/alfie/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-alfie-${{ hashFiles('**/alfie/yarn.lock') }}
+            ${{ runner.os }}-alfie-
+      - name: Install fastlane
+        run: sudo gem install fastlane -NV
+      - name: Install packages
+        run: yarn install
+        working-directory: ./alfie
+      - name: Test code
+        run: yarn run test
+        working-directory: ./alfie
+      - name: Lint code
+        run: yarn run lint
+        working-directory: ./alfie

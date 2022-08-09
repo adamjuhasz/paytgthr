@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Error</title>
+  <meta name="theme-color" content="#e780bb">
+  {{> head}}
+</head>
+
+<body class="pink">
+  <div class="app-frame framer background pink">
+    <div class="side-menu">
+      <div class="sidebar-header">
+        <a href="/"><img src="/images/paytgthr.svg" alt="pay tgthr logo"></img></a>
+      </div>
+      <div class="side-list"></div>
+    </div>
+    <div class="main-content column-stack">
+      <div class="content-header">
+        <a class="back-button" href="/">
+          <img class="back-chevron" src="/images/arrow-back.svg">
+          <div class="back-text font-small">Home</div>
+        </a>
+      </div>
+      <div class="content-frame center-flex-column">
+        <h2>We're a little confused over here</h2>
+        <p style="text-align: center;">
+          We seem to have hit an internal error in our systems. We'll investigate what happened and get back to you.
+        </p>
+      </div>
+      <div class="button-frame">
+        <a id="request-500-support" class="no-underline" href="mailto:hi@paytgthr.com">
+          <div class="primary button">Contact support</div>
+        </a>
+      </div>
+    </div>
+  </div>
+  {{> footer-signup}}
+  {{> footer-all}}
+  <script>
+    try {
+      var link = document.getElementById('request-500-support');
+      analytics.trackLink(link, 'Error500Help Clicked');
+      analytics.track("Page Error 500");
+    } catch(e) {
+      console.error(e);
+    }
+  </script>
+</body>
+
+</html>

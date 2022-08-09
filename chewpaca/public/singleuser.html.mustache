@@ -1,0 +1,684 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css"
+    crossorigin="anonymous">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <script>
+    function getBalance() {
+      var form = new FormData();
+      form.append('userid', '{{userid}}');
+      return fetch('/send/balancerequest', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+
+    const cancelPayment = (payId) => {
+      console.log(`cancelling ${payId}`)
+      var form = new FormData();
+      form.append('payid', payId);
+      return fetch('/send/cancelpayment', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+
+    const removeFunding = () => {
+      var form = new FormData();
+      form.append('userid', '{{userid}}');
+      return fetch('/send/removefunding', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+
+    const updateApto = () => {
+      var form = new FormData();
+      form.append('userid', '{{userid}}');
+      return fetch('/send/updateapto', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+
+    const userAskedToClose = () => {
+      var form = new FormData();
+      form.append('userid', '{{userid}}');
+      return fetch('/user/{{userid}}/state/close/requested', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+
+    const userIsFraudy = () => {
+      var form = new FormData();
+      form.append('userid', '{{userid}}');
+      return fetch('/user/{{userid}}/state/close/fraudy', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+
+    const activateUser = () => {
+      var form = new FormData();
+      form.append('userid', '{{userid}}');
+      return fetch('/user/{{userid}}/state/activate', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+  </script>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+      <ul>
+        <li><a href="/">Chewpaca</a></li>
+        <li><a href="/users">Users</a></li>
+        <li class="is-active"><a href="#" aria-current="page">{{id}}</a></li>
+      </ul>
+    </nav>
+    <div class="card">
+      <div class="card-content">
+        <p class="title">
+          {{name}}
+        </p>
+        <p class="subtitle">
+          <a href="mailto:{{email}}">{{email}}</a>
+        </p>
+        <footer class="card-footer">
+          <p class="card-footer-item">
+            Spendable balance: <b> <span class="currency-hs">{{spendable_balance}} </span></b>
+          </p>
+          <p class="card-footer-item">
+            Liability: <b><span class="currency-hs">{{liability}}</span></b>
+          </p>
+        </footer>
+      </div>
+    </div>
+
+    <div class="columns is-multiline">
+      <div class="column is-full">
+        <section class="section" id="userinfo">
+          <div class="tabs">
+            <ul>
+              <li class="is-active"><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">User revisions</h1>
+          <div class="box">
+            <form method="post" action="/user/{{userid}}/change/email">
+              <input type="hidden" name="userid" value="{{userid}}">
+              <div class="field">
+                <label class="label">Change email</label>
+                <div class="control">
+                  <input class="input" name="email" type="text" placeholder="me@email.com">
+                </div>
+                <p class="control">
+                  <button class="button is-danger" type="submit">
+                    Submit
+                  </button>
+                </p>
+              </div>
+            </form>
+          </div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th><abbr title="Revisions">Rev</abbr></th>
+                  <th><abbr title="Message Source">Msg</abbr></th>
+                  <th>status</th>
+                  <th>KYC status</th>
+                  <th>name</th>
+                  <th>phone</th>
+                  <th>cardholder id</th>
+                  <th>card status</th>
+                  <th>card id</th>
+                  <th>address</th>
+                  <th>Bank verified?</th>
+                  <th>Bank</th>
+                  <th>Bank Nums</th>
+                  <th>Dwolla Funding</th>
+                  <th>Dwolla id</th>
+                  <th>DOB</th>
+                  <th>SSN</th>
+                  <th>Disclosure</th>
+                  <th>Consent</th>
+                  <th>email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#user}}
+                <tr>
+                  <td>
+                    <b><span class="timeago" datetime="{{created_at}}">{{created_at}}</span></b>
+                    <br>{{created_at}}
+                  </td>
+                  <td>{{revision}}</td>
+                  <td class="is-family-code"><a href="/message?id={{msgsource}}">{{msgsource}}</a></td>
+                  <td>{{userstate.tag}}</td>
+                  <td>{{aptokycstatus}}</td>
+                  <td>{{lastname}}, {{firstname}}</td>
+                  <td>{{phone}}</td>
+                  <td>{{aptocardholderid}}</td>
+                  <td>{{aptocardstatus}}</td>
+                  <td>{{aptocardid}}</td>
+                  <td>
+                    {{addressstreet}}
+                    <br>{{addressstreet2}}
+                    <br><span style="white-space:nowrap;">{{addresscity}}, {{addressstate}}, {{addresszip}}</span>
+                  </td>
+                  <td>
+                    {{bankverified}}
+                    <br>{{bankverifedamounts}}
+                  </td>
+                  <td>
+                    <span style="white-space:nowrap;">"{{bankaccountname}}"</span>
+                    <br>{{banktype}}
+                    <br>{{bankname}}
+                  </td>
+                  <td>
+                    {{bankacount}}
+                    <br>{{bankrouting}}
+                  </td>
+                  <td>{{dwollafundingid}}</td>
+                  <td>{{dwollaid}}</td>
+                  <td>{{dob}}</td>
+                  <td>{{ssn}}</td>
+                  <td>{{dislcosureok}}</td>
+                  <td>{{constentok}}</td>
+                  <td>{{email}}</td>
+                </tr>
+                {{/user}}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="riskscores">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li class="is-active"><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Risk Scores</h1>
+          <div class="box">
+            <form method="post" action="/user/{{userid}}/risk/adjustment">
+              <input type="hidden" name="userid" value="{{userid}}">
+              <div class="field">
+                <label class="label">Manual Adjustment</label>
+                <div class="control">
+                  <input class="input" name="trustscore" type="text" placeholder="80">
+                </div>
+                <p class="help">0 to 100</p>
+                <p class="control">
+                  <button class="button is-danger" type="submit">
+                    Submit
+                  </button>
+                </p>
+              </div>
+            </form>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Current Trust Score</th>
+                <th>Change</th>
+                <th>Fact</th>
+                <th>Revision</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#riskscores}}
+              <tr>
+                <td><span class="timeago" datetime="{{createdat}}">{{createdat}}</span><br>{{createdat}}</td>
+                <td>{{trustscore}}</td>
+                <td>{{change}}</td>
+                <td>{{fact.kind}} {{fact.body}}</td>
+                <td>{{rev}}</td>
+                <td class="is-family-code"><a href="/message?id={{msgsource}}">{{msgsource}}</a></td>
+              </tr>
+              {{/riskscores}}
+            </tbody>
+          </table>
+        </section>
+
+        <section class="section" id="balances">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li class="is-active"><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Balances</h1>
+          <div class="field is-grouped">
+            <p class="control"><button class="button is-warning" onClick="getBalance()">Refresh Balance</button></p>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Current Balance</th>
+                <th>Available Balance</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Lookup Time</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#balances}}
+              <tr>
+                <td><span class="timeago" datetime="{{created_at}}">{{created_at}}</span>}<br>{{created_at}}</td>
+                <td class="currency-hs">{{pbAccount.accountCurrentBalance}}</td>
+                <td class="currency-hs">{{pbAccount.accountAvailableBalance}}</td>
+                <td>{{pbAccount.accountName}}</td>
+                <td>{{pbAccount.accountType.tag}} {{pbAccount.accountType.contents}}</td>
+                <td>{{pbAccessTime}} s</td>
+                <td class="is-family-code"><a href="/message?id={{pbMsgSource}}">{{pbMsgSource}}</a></td>
+              </tr>
+              {{/balances}}
+            </tbody>
+          </table>
+        </section>
+
+        <section class="section" id="plaidtokens">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li class="is-active"><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Plaid Tokens</h1>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Revision</th>
+                <th>Primary Account</th>
+                <th>Item</th>
+                <th>Routing</th>
+                <th>Account Number</th>
+                <th>Token</th>
+                <th>Environment</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#tokens}}
+              <tr>
+                <td>{{revision}}</td>
+                <td class="is-family-code">{{accountPrimary}}</td>
+                <td class="is-family-code">{{itemId}}</td>
+                <td>{{accountABA}}</td>
+                <td>{{accountDDA}}</td>
+                <td class="is-family-code">{{aToken}}</td>
+                <td>{{plaidEnv}}</td>
+                <td class="is-family-code"><a href="/message?id={{msgSource}}">{{msgSource}}</a></td>
+              </tr>
+              {{/tokens}}
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="column is-full">
+        <section class="section" id="ledger">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li class="is-active"><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Ledger</h1>
+          <div class="box">
+            <form method="post" action="/user/{{userid}}/ledger/adjustment">
+              <input type="hidden" name="userid" value="{{userid}}">
+              <div class="field">
+                <label class="label">Manual Adjustment</label>
+                <div class="control">
+                  <input class="input" name="ledgervalue" type="text" placeholder="1.12">
+                </div>
+                <p class="help">Without dollar sign, 2 decimal places, +/-</p>
+                <p class="control">
+                  <button class="button is-danger" type="submit">
+                    Submit
+                  </button>
+                </p>
+              </div>
+            </form>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>date</th>
+                <th>id</th>
+                <th>revision</th>
+                <th>message</th>
+                <th>balance</th>
+                <th>amount</th>
+                <th>type</th>
+                <th>linked ID</th>
+                <th>idempotency</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#ledger}}
+              <tr>
+                <td><span class="timeago" datetime="{{created_at}}">{{created_at}}</span><br>{{created_at}}</td>
+                <td class="is-family-code">{{id}}</td>
+                <td>{{revision}}</td>
+                <td class="is-family-code"><a href="/message?id={{msgsource}}">{{msgsource}}</a></td>
+                <td class="currency-hs">{{balance}}</td>
+                <td class="currency-hs">{{amount}}</td>
+                <td>{{type}}</td>
+                <td class="is-family-code">{{link}}</td>
+                <td>{{idempotency}}</td>
+              </tr>
+              {{/ledger}}
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="column is-full" id="payments">
+        <section class="section">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li class="is-active"><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Payments</h1>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>id</th>
+                <th>revision</th>
+                <th>status</th>
+                <th>transaction</th>
+                <th>amount</th>
+                <th>type</th>
+                <th>Method</th>
+                <th>Method ID</th>
+                <th>actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#payments}}
+              <tr>
+                <td class="is-family-code">{{id}}</td>
+                <td>{{revision}}</td>
+                <td>{{status}}</td>
+                <td></td>
+                <td class="currency-hs">{{amount}}</td>
+                <td>{{method}}</td>
+                <td>{{type}}</td>
+                <td>{{methodId}}</td>
+                <td><button class="button is-danger" onClick="cancelPayment('{{id}}')">Cancel</button></td>
+              </tr>
+              {{/payments}}
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="column is-full">
+        <section class="section" id="transactions">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li class="is-active"><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Transactions</h1>
+          <table class="table">
+            <thead>
+              <tr>
+                <td>id</td>
+                <th>purchaser</th>
+                <th>state</th>
+                <th>Description</th>
+                <th>revision</th>
+                <th>amount</th>
+                <th>purchase time</th>
+                <th>split</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#transactions}}
+              <tr>
+                <td><a class="is-family-code" href="/transaction?id={{id}}">{{id}}</a></td>
+                <td><a class="is-family-code" href="/user?id={{userid}}">{{userid}}</a></td>
+                <td><b>{{state.kind}}</b> <i>{{state.body}}</i></td>
+                <td>{{description}}</td>
+                <td>{{revision}}</td>
+                <td class="currency-hs">{{displayamount}}</td>
+                <td>{{purchasedat}}</td>
+                <td>{{#splitamounts}}<div class="split-hs">{{.}}</div>{{/splitamounts}}</td>
+              </tr>
+              {{/transactions}}
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="column is-full">
+        <section class="section" id="groups">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li class="is-active"><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Groups</h1>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Last Update</th>
+                <th>Revisions</th>
+                <th>Status</th>
+                <th>Members</th>
+                <th>Split</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#groups}}
+              <tr>
+                <th class="is-family-code"><a href="/group/{{id}}">{{id}}</a></th>
+                <td><span class="timeago" datetime="{{created_at}}">{{created_at}}</span><br>{{created_at}}</td>
+                <td>{{revision}}</td>
+                <td>{{status}}</td>
+                <td>{{#members}} <a href="/user?id={{user}}"> ({{accepted}}) {{user}}</a><br>{{/members}}</td>
+                <td>{{#split}} <a href="/user?id={{user}}">({{approved}}) {{user}} </a><br>{{/split}}</td>
+              </tr>
+              {{/groups}}
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="column is-full">
+        <section class="section" id="messages">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li class="is-active"><a href="#messages">Messages</a></li>
+              <li><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Messages</h1>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>id</th>
+                <th>key</th>
+                <th>timestamp</th>
+                <th>type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#msgs}}
+              <tr>
+                <td class="is-family-code"><a href="/message?id={{mrMsgId}}">{{mrMsgId}}</a></td>
+                <td>{{mrKey}}</td>
+                <td><span class="timeago" datetime="{{mrTimestamp}}">{{mrTimestamp}}</span><br>{{mrTimestamp}}</td>
+                <td>{{mrType}}</td>
+              </tr>
+              {{/msgs}}
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="column is-full">
+        <section class="section" id="actions">
+          <div class="tabs">
+            <ul>
+              <li><a href="#userinfo">User Info</a></li>
+              <li><a href="#riskscores">Risk Scores</a></li>
+              <li><a href="#balances">Balances</a></li>
+              <li><a href="#plaidtokens">Plaid Tokens</a></li>
+              <li><a href="#ledger">Ledger</a></li>
+              <li><a href="#payments">Payments</a></li>
+              <li><a href="#transactions">Transactions</a></li>
+              <li><a href="#groups">Groups</a></li>
+              <li><a href="#messages">Messages</a></li>
+              <li class="is-active"><a href="#actions">User Actions</a></li>
+            </ul>
+          </div>
+          <h1 class="is-size-1">Actions</h1>
+          <button class="button is-danger" onClick="removeFunding()">Remove funding source</button>
+          <button class="button" onClick="updateApto()">Update Apto</button>
+          <button class="button is-danger" onClick="userAskedToClose()">Close Account because user</button>
+          <button class="button is-danger" onClick="userIsFraudy()">Close Account for Fraud</button>
+          <button class="button" onClick="activateUser()">Activate user</button>
+        </section>
+      </div>
+    </div>
+  </div>
+  {{> currency-js}}
+</body>
+
+</html>

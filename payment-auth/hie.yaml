@@ -1,0 +1,9 @@
+# https://github.com/mpickering/hie-bios#stack
+cradle:
+  stack:
+    - path: "./src"
+      component: "payment-auth:lib"
+    - path: "./test"
+      component: "payment-auth:test:payment-auth-test"
+    - path: "./app"
+      component: "payment-auth:exe:payment-auth-exe"

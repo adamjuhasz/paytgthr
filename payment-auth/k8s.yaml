@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-auth
+spec:
+  selector:
+    matchLabels:
+      app: payment-auth
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: payment-auth
+        affinityhash: "payment-auth"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: affinityhash
+                    operator: In
+                    values:
+                      - "payment-auth"
+              topologyKey: kubernetes.io/hostname
+      serviceAccountName: payment-auth
+      volumes:
+        - name: vault-token
+          emptyDir:
+            medium: Memory
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: vault-agent-auth
+          image: vault:1.2.3
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          env:
+            - name: VAULT_ADDR
+              value: "https://vault.default.svc.cluster.local:8200"
+            - name: ROLE
+              value: "payment-auth"
+            - name: VAULT_SKIP_VERIFY
+              value: "true"
+          command:
+            [
+              "sh",
+              "-c",
+              "mkdir /etc/vault && echo -e \"exit_after_auth = false\npid_file = \\\"/home/vault/pidfile\\\"\n\nauto_auth {\n  method \\\"kubernetes\\\" {\n    mount_path = \\\"auth/kubernetes\\\"\n    config = {\n      role = \\\"$ROLE\\\"\n    }\n  }\n  sink \\\"file\\\" {\n    config = {\n      path = \\\"/home/app/vault/.vault-token\\\"\n    }\n  }\n}\n\" > /etc/vault/vault-agent-config.hcl && cat /etc/vault/vault-agent-config.hcl && vault agent -config=/etc/vault/vault-agent-config.hcl -log-level=debug",
+            ]
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "3m"
+            limits:
+              memory: "10Mi"
+              cpu: "500m"
+        - name: token-chmod
+          image: busybox:1.31.0
+          command:
+            [
+              "sh",
+              "-c",
+              "while true; do chmod 444 /home/app/vault/.vault-token; sleep 1; done && tail -f /dev/null",
+            ]
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          resources:
+            requests:
+              memory: "1Mi"
+              cpu: "2m"
+            limits:
+              memory: "20Mi"
+              cpu: "500m"
+        - name: payment-auth
+          image: us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/payment-auth:master
+          command: ["/home/app/haskell-exe"]
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "30m"
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8443
+          env:
+            - name: VAULT_BASE
+              value: "https://vault.default.svc.cluster.local:8200"
+            - name: TOKEN_FILE_LOCATION
+              value: "/home/app/vault/.vault-token"
+            - name: "AMQP_BASE"
+              value: "rhinelander-rabbitmq-ha.default.svc.cluster.local:5672"
+            - name: "RMQ_ROLE"
+              value: "generalrw-role"
+            - name: EKG_PORT
+              value: "8000"
+            - name: "PORT"
+              value: "3000"
+#---
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: payment-auth-networkpolicy
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: payment-auth
+#   policyTypes:
+#     - Ingress
+#     - Egress
+#   ingress:
+#     - from:
+#         - ipBlock:
+#             cidr: 0.0.0.0/0
+#       ports:
+#         - protocol: TCP
+#           port: 3000
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: payment-auth
+automountServiceAccountToken: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-auth-web-internal
+  labels:
+    app: payment-auth
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}' # Creates an NEG after an Ingress is created
+spec:
+  ports:
+    - targetPort: 8443
+      port: 443
+      protocol: TCP
+  selector:
+    app: payment-auth

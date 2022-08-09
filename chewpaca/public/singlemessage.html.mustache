@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/">Chewpaca</a></li>
+          <li><a href="{{from}}">Messages</a></li>
+          <li class="is-active"><a href="#" aria-current="page">{{id}}</a></li>
+        </ul>
+      </nav>
+      <section class="section">
+        <h2 class="is-size-1">Messages Info</h2>
+        {{#msg}}
+          <table class="table">
+            <tbody>
+              <tr>
+                <th>id</th>
+                <td class="is-family-code">{{mrMsgId}}</td>
+              </tr>
+              <tr>
+                <th>key</th>
+                <td>{{mrKey}}</td>
+              </tr>
+              <tr>
+                <th>timestamp</th>
+                <td class="timeago" datetime="{{mrTimestamp}}">{{mrTimestamp}}</td>
+              </tr>
+              <tr>
+                <th>user</th>
+                <td class="is-family-code"><a href="/user?id={{mrUser}}">{{mrUser}}</a></td>
+              </tr>
+              <tr>
+                <th>parent</th>
+                <td><a href="/message?id={{mrParent}}">{{mrParent}}</a></td>
+              </tr>
+              <tr>
+                <th>source</th>
+                <td><a href="/message?id={{mrSource}}">{{mrSource}}</a></td>
+              </tr>
+              <tr>
+                <th>type</th>
+                <td>{{mrType}}</td>
+              </tr>
+              <tr>
+                <th>body</th>
+                <td><pre>{{mrBody}}<pre></td>
+              </tr>
+            </tbody>
+          </table>
+        {{/msg}}
+      </section>
+      <section>
+        <h2 class="is-size-1">Related Messages</h2>
+        <table class="table is-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>key</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#related}}
+              <tr>
+                <th class="is-family-code"><a href="/message?id={{mrMsgId}}&from=/messages%3Foffset%3D{{current}}">{{mrMsgId}}</a></th>
+                <td>{{mrKey}}</td>
+                <td class="timeago" datetime="{{mrTimestamp}}">{{mrTimestamp}}</td>
+              </tr>
+            {{/related}}
+          </tbody>
+        </table>
+      </section>
+    </div>
+    {{> currency-js}}
+  </body>
+</html>

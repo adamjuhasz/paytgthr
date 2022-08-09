@@ -1,0 +1,12 @@
+.stack-work/
+payment-auth.cabal
+*~
+*.prof
+
+#secrets
+.env
+amqp_conn_string
+psql_conn_string
+plaid_base_url
+plaid_client_id
+plaid_secret

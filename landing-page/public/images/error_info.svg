@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="27px" height="27px" viewBox="0 0 27 27" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
+    <title>error_info</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" fill-rule="nonzero">
+            <g id="error_info">
+                <circle id="Oval" fill="#FFFFFF" cx="13.5" cy="13.5" r="13.5"></circle>
+                <path d="M13.5,7 C14.3285432,7 15,7.74608887 15,8.66653019 L14.6999651,14.6666595 C14.6999651,15.4036332 14.1632534,16 13.5,16 C12.8367466,16 12.3000349,15.4036332 12.3000349,14.6666595 L12,8.66653019 C12,7.74608887 12.6714568,7 13.5,7 Z M13.5,17 C14.3281129,17 15,17.6718545 15,18.4999273 C15,19.3281455 14.3281129,20 13.5,20 C12.6718871,20 12,19.3281455 12,18.4999273 C12,17.6718545 12.6718871,17 13.5,17 Z" id="Shape" fill="#FF83AF"></path>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,9 @@
+.stack-work/
+auditor.cabal
+*~
+
+cloudbuild.yaml
+k8s.yaml
+
+#secrets
+.env

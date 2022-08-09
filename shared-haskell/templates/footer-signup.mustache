@@ -1,0 +1,80 @@
+<script>
+  function genFormatter(firstIndex, secondIndex) {
+    return function (e) {
+      var cursorStart = e.target.selectionStart,
+          cursorEnd = e.target.selectionEnd,
+          origVal = e.target.value;
+
+      formatInput(firstIndex, secondIndex, e.target, e.inputType);
+      
+      if (cursorStart != origVal.length) {
+        e.target.setSelectionRange(cursorStart, cursorEnd);
+      }
+    }
+  }
+
+  function formatInput(firstIndex, secondIndex, target, inputType) {
+    var origVal = target.value;
+    var val = origVal.replace(/\D/g, '');
+    var first = val.slice(0, firstIndex);
+    var second = val.slice(firstIndex, secondIndex);
+    var third = val.slice(secondIndex);
+
+    var newVal = first;
+    if (first.length == firstIndex && !(inputType == "deleteContentBackward" && second.length == 0)) {
+      newVal = newVal.concat("-");
+    }
+    newVal = newVal.concat(second);
+    if (second.length == (secondIndex - firstIndex) && !(inputType == "deleteContentBackward" && third.length == 0)) {
+      newVal = newVal.concat("-");
+    }
+    newVal = newVal.concat(third);
+
+    target.value = newVal;
+  }
+
+  var elements = document.querySelectorAll('form');
+  elements.forEach(function(el) {
+    el.addEventListener("submit", function(_evt) {
+      el.disabled = true; // html5 Only
+      //backup: disable all buttons too
+      var buttons = el.querySelectorAll('*[type="submit"]');
+      buttons.forEach(function(aButton) {
+        aButton.disabled = true;
+        spinners = aButton.querySelectorAll('.spin-dual-ring');
+        spinners.forEach(function(spinner) {
+          spinner.style.display = "initial";
+        });
+      });
+    });
+  });     
+  if (window.analytics != undefined) {
+    try {      
+      window.analytics.ready(function(){
+        try {
+          {{^enable-drift}}
+          drift.on('ready',function(api){
+            api.widget.hide();
+          });
+          {{/enable-drift}}
+        } catch (e) {
+          console.log(e);
+        }
+      });
+    } catch(e) {
+      console.error(e);
+    }
+  }
+  
+  /**
+  * If browser back button was used, flush cache
+  * This ensures that user will always see an accurate, up-to-date view based on their state 
+  **/
+  (function () {
+    window.onpageshow = function(event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+  })();
+</script>

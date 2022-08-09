@@ -1,0 +1,21 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: daily-sync-segment
+spec:
+  schedule: "@midnight"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: wget
+              image: cirrusci/wget
+              args:
+                - wget
+                - --method=POST
+                - --no-check-certificate
+                - --verbose
+                - --timeout=36000
+                - https://accounts-fsm-web.default.svc.cluster.local/admin/sync/segment
+          restartPolicy: Never

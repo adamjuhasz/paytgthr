@@ -1,0 +1,9 @@
+# https://github.com/mpickering/hie-bios#stack
+cradle:
+  stack:
+    - path: "./src"
+      component: "api-privacy:lib"
+    - path: "./test"
+      component: "api-privacy:test:api-privacy-test"
+    - path: "./app"
+      component: "api-privacy:exe:api-privacy-exe"

@@ -1,0 +1,6 @@
+.stack-work/
+chewpaca.cabal
+*~
+
+#secrts
+.env

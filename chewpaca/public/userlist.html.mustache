@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/">Chewpaca</a></li>
+          <li class="is-active"><a href="#" aria-current="page">Users</a></li>
+        </ul>
+      </nav>
+      <section class="section">
+        <div class="table-container">
+          <table class="table is-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Last Update</th>
+                <th><abbr title="Revisions">Rev</abbr></th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Name</th>
+                <th>Cardholder ID</th>
+                <th>Card Status</th>
+                <th>Card ID</th>
+                <th>Bank Info</th>
+                <th>Address</th>
+                <th>Dwolla</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#users}}
+                <tr>
+                  <th class="is-family-code"><a href="/user?id={{userid}}">{{userid}}</a></th>
+                  <td class="timeago" datetime="{{created_at}}">{{created_at}}</td>
+                  <td>{{revision}}</td>
+                  <td>{{email}}</td>
+                  <td>{{userstate.tag}} {{aptokycstatus}}</td>
+                  <td>{{firstname}} {{lastname}}</td>
+                  <td>{{aptocardholderid}}</td>
+                  <td>{{aptocardstatus}}</td>
+                  <td>{{aptocardid}}</td>
+                  <td>{{bankaccountname}} at {{bankname}}</td>
+                  <td>{{addressstreet}} {{addressstreet2}}, {{addresscity}}, {{addressstate}} {{addresszip}}</td>
+                  <td>{{dwollafundingid}}</td>
+                </tr>
+              {{/users}}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+    {{> currency-js}}
+  </body>
+</html>

@@ -1,0 +1,8 @@
+.stack-work/
+landing-page.cabal
+*~
+
+#secrets
+.env
+.vault-token
+psql_conn_string

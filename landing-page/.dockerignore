@@ -1,0 +1,11 @@
+.stack-work/
+landing-page.cabal
+*~
+
+cloudbuild.yaml
+k8s.yaml
+
+#secrets
+.env
+amqp_conn_string
+psql_conn_string

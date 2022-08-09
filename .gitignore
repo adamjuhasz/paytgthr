@@ -1,0 +1,6 @@
+.DS_Store
+node_modules
+.stack-work
+.haskell-code-explorer
+.env
+.vault-token

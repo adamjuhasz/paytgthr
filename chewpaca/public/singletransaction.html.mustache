@@ -1,0 +1,160 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/">Chewpaca</a></li>
+          <li><a href="/transactions">Transactions</a></li>
+          <li class="is-active"><a href="#" aria-current="page">{{id}}</a></li>
+        </ul>
+      </nav>
+      <section class="section">
+        <h2 class="is-size-1">Transaction Info</h2>
+        {{#mostrecent}}
+          <table class="table">
+            <tbody>
+              <tr>
+                <th>id</th>
+                <td class="is-family-code">{{id}}</td>
+              </tr>
+              <tr>
+                <th>Date</th>
+                <td class="timeago" datetime="{{purchasedat}}">{{purchasedat}}</td>
+              </tr>
+              <tr>
+                <th>purcahser</th>
+                <td class="is-family-code"><a href="/user?id={{userid}}">{{userid}}</a></td>
+              </tr>
+              <tr>
+                <th>state</th>
+                <td><b>{{state.kind}}</b> <i>{{state.body}}</i></td>
+              </tr>
+              <tr>
+                <th>description</th>
+                <td>{{description}}</td>
+              </tr>
+              <tr>
+                <th>merchant</th>
+                <td>({{merchant.mcc}}) {{merchant.name}} - {{merchant.locality}} {{merchant.region}} {{merchant.country}}</td>
+              </tr>
+              <tr>
+                <th>merchant mcc desc</th>
+                <td>{{merchant.mccdesc}}</td>
+              </tr>
+              <tr>
+                <th>context</th>
+                <td>{{details.context}}</td>
+              </tr>
+              <tr>
+                <th>card present</th>
+                <td>{{details.iscardpresent}}</td>
+              </tr>
+              <tr>
+                <th>online</th>
+                <td>{{details.isonline}}</td>
+              </tr>
+              <tr>
+                <th>international</th>
+                <td>{{details.isinternational}}</td>
+              </tr>
+              <tr>
+                <th>emv</th>
+                <td>{{details.isemv}}</td>
+              </tr>
+              <tr>
+                <th>type</th>
+                <td>{{details.type}}</td>
+              </tr>
+              <tr>
+                <th>pcpDescription</th>
+                <td>{{details.description}}</td>
+              </tr>
+              <tr>
+                <th>group</th>
+                <td>{{groupid}}</td>
+              </tr>
+              <tr>
+                <th>Amount</th>
+                <td class="currency-hs">{{displayamount}}</td>
+              </tr>
+              <tr>
+                <th>Source Id</th>
+                <td>{{sourceid}} - {{source}}</td>
+              </tr>
+              <tr> 
+                <th>Adjustments</th>
+                <td>
+                  <table>
+                    <thead>
+                      <th>id</th>
+                      <th>date</th>
+                      <th>local</th>
+                      <th>billing</th>
+                      <th>type</th>
+                    </thead>
+                    <tbody>
+                      {{#adjustments}}
+                        <tr>
+                          <td class="is-family-code">{{id}}</td>
+                          <td class="timeago" datetime="{{createdat}}">{{createdat}}</td>
+                          <td class="currency-hs">{{amountlocal}}</td>
+                          <td class="currency-hs">{{amountbilling}}</td>
+                          <td>{{type}}</td>
+                        </tr>
+                      {{/adjustments}}
+                    </tbody>
+                  </table>
+                <td>
+              </tr>
+            </tbody>
+          </table>
+        {{/mostrecent}}
+      </section>
+      <section class="section">
+        <div class="table-container">
+          <table class="table is-striped">
+            <thead>
+              <tr>
+                <th>revision</th>
+                <th>state</th>
+                <th>name</th>
+                <th>amount</th>
+                <th>purchase time</th>
+                <th>split</th>
+                <th>Merchant</th>
+                <th>Context</th>
+                <th>description</th>
+                <th>event</th>
+                <th>idempotency</th>
+                <th>message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#trxs}}
+                <tr>
+                  <td>{{revision}}</td>
+                  <td><b>{{state.kind}}</b> <i>{{state.body}}</i></td>
+                  <td>{{description}}</td>
+                  <td class="currency-hs">{{displayamount}}</td>
+                  <td class="timeago" datetime="{{purchasedat}}">{{purchasedat}}</td>
+                  <td>{{#splitamounts}}<div class="split-hs">{{.}}</div>{{/splitamounts}}</td>
+                  <td>({{merchant.mcc}}) {{merchant.name}} - {{merchant.locality}} {{merchant.region}} {{merchant.country}}</td>
+                  <td>{{details.context}}</td>
+                  <td>{{details.description}}</td>
+                  <td>{{sourceevent}}</td>
+                  <td>{{sourceidempotency}}</td>
+                  <td><a href="/message?id={{msgsource}}">{{msgsource}}</a></td>
+                </tr>
+              {{/trxs}}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+    {{> currency-js}}
+  </body>
+</html>

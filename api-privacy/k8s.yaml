@@ -1,0 +1,161 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: privacy-api
+spec:
+  selector:
+    matchLabels:
+      app: privacy-api
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: privacy-api
+        affinityhash: "privacy-api"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: affinityhash
+                    operator: In
+                    values:
+                      - "privacy-api"
+              topologyKey: kubernetes.io/hostname
+      serviceAccountName: privacy-api
+      volumes:
+        - name: vault-token
+          emptyDir:
+            medium: Memory
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: vault-agent-auth
+          image: vault:1.2.3
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          env:
+            - name: VAULT_ADDR
+              value: "https://vault.default.svc.cluster.local:8200"
+            - name: ROLE
+              value: "privacy-api"
+            - name: VAULT_SKIP_VERIFY
+              value: "true"
+          command:
+            [
+              "sh",
+              "-c",
+              "mkdir /etc/vault && echo -e \"exit_after_auth = false\npid_file = \\\"/home/vault/pidfile\\\"\n\nauto_auth {\n  method \\\"kubernetes\\\" {\n    mount_path = \\\"auth/kubernetes\\\"\n    config = {\n      role = \\\"$ROLE\\\"\n    }\n  }\n  sink \\\"file\\\" {\n    config = {\n      path = \\\"/home/app/vault/.vault-token\\\"\n    }\n  }\n}\n\" > /etc/vault/vault-agent-config.hcl && cat /etc/vault/vault-agent-config.hcl && vault agent -config=/etc/vault/vault-agent-config.hcl -log-level=debug",
+            ]
+          resources:
+            requests:
+              memory: "1Mi"
+              cpu: "1m"
+            limits:
+              memory: "10Mi"
+              cpu: "500m"
+        - name: token-chmod
+          image: busybox:1.31.0
+          command:
+            [
+              "sh",
+              "-c",
+              "while true; do chmod 444 /home/app/vault/.vault-token; sleep 1; done && tail -f /dev/null",
+            ]
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          resources:
+            requests:
+              memory: "1Mi"
+              cpu: "1m"
+            limits:
+              memory: "20Mi"
+              cpu: "500m"
+        - name: privacy-api
+          image: us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/api-privacy:master
+          command: ["/home/app/haskell-exe"]
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "30m"
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 4000
+            - containerPort: 8443
+          env:
+            - name: EXT_PORT
+              value: "8443"
+            - name: INT_PORT
+              value: "4000"
+            - name: VAULT_BASE
+              value: "https://vault.default.svc.cluster.local:8200"
+            - name: TOKEN_FILE_LOCATION
+              value: "/home/app/vault/.vault-token"
+          livenessProbe:
+            httpGet:
+              path: /sys/health/live
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: privacy-api-service
+  labels:
+    app: privacy-api
+  annotations:
+    cloud.google.com/app-protocols: '{"https":"HTTPS"}'
+    beta.cloud.google.com/backend-config: '{"default": "privacy-api-service-backend"}'
+    cloud.google.com/neg: '{"ingress": true}' # Creates an NEG after an Ingress is created
+spec:
+  type: NodePort
+  ports:
+    - port: 443
+      targetPort: 8443
+      name: https
+  selector:
+    app: privacy-api
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: privacy-api-service-backend
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    port: 8443
+    type: HTTPS
+    requestPath: /sys/health/ingress
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: privacy-api
+automountServiceAccountToken: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-privacy-web-internal
+  labels:
+    app: privacy-api
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}' # Creates an NEG after an Ingress is created
+spec:
+  ports:
+    - port: 443
+      targetPort: 4000
+      protocol: TCP
+  selector:
+    app: privacy-api
+# end

@@ -1,0 +1,28 @@
+<script>
+  {{#user}}
+    try {
+      analytics.ready(function() {
+        if (analytics.user().id() == null) {
+          analytics.alias('{{userid}}', function() {
+            setTimeout(function() {
+              analytics.identify('{{userid}}',{
+                firstName: {{#firstName}}'{{firstName}}'{{/firstName}}{{^firstName}}undefined{{/firstName}},
+                lastName: {{#lastName}}'{{lastName}}'{{/lastName}}{{^lastName}}undefined{{/lastName}},
+                email: {{#email}}'{{email}}'{{/email}}{{^email}}undefined{{/email}}
+              });
+            }, 1000);
+          });
+          console.log("aliasing user");
+        } else {
+          analytics.identify('{{userid}}',{
+            firstName: {{#firstName}}'{{firstName}}'{{/firstName}}{{^firstName}}undefined{{/firstName}},
+            lastName: {{#lastName}}'{{lastName}}'{{/lastName}}{{^lastName}}undefined{{/lastName}},
+            email: {{#email}}'{{email}}'{{/email}}{{^email}}undefined{{/email}}
+          });
+        }
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  {{/user}}
+</script>

@@ -1,0 +1,31 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.paytgthr.alfie",
+      "sha256_cert_fingerprints": [
+        "B6:15:4A:7E:BF:8C:E9:A6:A7:E3:2B:DC:E5:BF:D6:07:4A:DD:18:03:F5:79:C5:C3:F5:5A:F0:E6:B8:49:C7:F1",
+        "2C:36:CD:95:0F:BA:05:4A:B3:91:31:14:13:29:94:35:8D:20:59:74:59:B2:FC:23:E0:96:4F:69:13:26:7B:50"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.get_login_creds"],
+    "target": {
+      "namespace": "web",
+      "site": "https://paytgthr.com"
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.get_login_creds"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.paytgthr.alfie",
+      "sha256_cert_fingerprints": [
+        "B6:15:4A:7E:BF:8C:E9:A6:A7:E3:2B:DC:E5:BF:D6:07:4A:DD:18:03:F5:79:C5:C3:F5:5A:F0:E6:B8:49:C7:F1",
+        "2C:36:CD:95:0F:BA:05:4A:B3:91:31:14:13:29:94:35:8D:20:59:74:59:B2:FC:23:E0:96:4F:69:13:26:7B:50"
+      ]
+    }
+  }
+]

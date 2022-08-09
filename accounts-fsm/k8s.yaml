@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounts-fsm
+spec:
+  selector:
+    matchLabels:
+      app: accounts-fsm
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: accounts-fsm
+        affinityhash: "accounts-fsm"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: affinityhash
+                    operator: In
+                    values:
+                      - "accounts-fsm"
+              topologyKey: kubernetes.io/hostname
+      serviceAccountName: accounts-fsm
+      volumes:
+        - name: vault-token
+          emptyDir:
+            medium: Memory
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: vault-agent-auth
+          image: vault:1.2.3
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          env:
+            - name: VAULT_ADDR
+              value: "https://vault.default.svc.cluster.local:8200"
+            - name: ROLE
+              value: "accounts-fsm"
+            - name: VAULT_SKIP_VERIFY
+              value: "true"
+          command:
+            [
+              "sh",
+              "-c",
+              "mkdir /etc/vault && echo -e \"exit_after_auth = false\npid_file = \\\"/home/vault/pidfile\\\"\n\nauto_auth {\n  method \\\"kubernetes\\\" {\n    mount_path = \\\"auth/kubernetes\\\"\n    config = {\n      role = \\\"$ROLE\\\"\n    }\n  }\n  sink \\\"file\\\" {\n    config = {\n      path = \\\"/home/app/vault/.vault-token\\\"\n    }\n  }\n}\n\" > /etc/vault/vault-agent-config.hcl && cat /etc/vault/vault-agent-config.hcl && vault agent -config=/etc/vault/vault-agent-config.hcl -log-level=debug",
+            ]
+          resources:
+            requests:
+              memory: "1Mi"
+              cpu: "1m"
+            limits:
+              memory: "10Mi"
+              cpu: "500m"
+        - name: token-chmod
+          image: busybox:1.31.0
+          command:
+            [
+              "sh",
+              "-c",
+              "while true; do chmod 444 /home/app/vault/.vault-token; sleep 1; done && tail -f /dev/null",
+            ]
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          resources:
+            requests:
+              memory: "1Mi"
+              cpu: "1m"
+            limits:
+              memory: "20Mi"
+              cpu: "500m"
+        - name: accounts-fsm
+          image: us-central1-docker.pkg.dev/infra-tgthr/tgthr-docker/accounts-fsm:master
+          command: ["/home/app/haskell-exe"]
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: vault-token
+              mountPath: /home/app/vault
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "10m"
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+          env:
+            - name: VAULT_BASE
+              value: "https://vault.default.svc.cluster.local:8200"
+            - name: TOKEN_FILE_LOCATION
+              value: "/home/app/vault/.vault-token"
+            - name: "AMQP_BASE"
+              value: "rhinelander-rabbitmq-ha.default.svc.cluster.local:5672"
+            - name: "RMQ_ROLE"
+              value: "generalrw-role"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: accounts-fsm
+automountServiceAccountToken: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: accounts-fsm-web
+  labels:
+    app: accounts-fsm
+spec:
+  ports:
+    - targetPort: 8080
+      port: 443
+      protocol: TCP
+  selector:
+    app: accounts-fsm

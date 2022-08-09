@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/">Chewpaca</a></li>
+          <li class="is-active"><a href="#" aria-current="page">Transactions</a></li>
+        </ul>
+      </nav>
+      <section class="section">
+        <table class="table is-striped">
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>purchaser</th>
+              <th>state</th>
+              <th>name</th>
+              <th>revision</th>
+              <th>amount</th>
+              <th>purchase time</th>
+              <th>split</th>
+              <th>Merchant</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#transactions}}
+              <tr>
+                <td class="is-family-code"><a href="/transaction?id={{id}}">{{id}}</a></td>
+                <td><a class="is-family-code" href="/user?id={{userid}}">{{userid}}</a></td>
+                <td><b>{{state.kind}}</b> <i>{{state.body}}</i></td>
+                <td>{{description}}</td>
+                <td>{{revision}}</td>
+                <td class="currency-hs">{{displayamount}}</td>
+                <td class="timeago" datetime="{{purchasedat}}">{{purchasedat}}</td>
+                <td>{{#splitamounts}}<div class="split-hs">{{.}}</div>{{/splitamounts}}</td>
+                <td>({{merchant.mcc}}) {{merchant.name}} - {{merchant.locality}} {{merchant.region}} {{merchant.country}}</td>
+              </tr>
+            {{/transactions}}
+          </tbody>
+        </table>
+      </section>
+    </div>
+    {{> currency-js}}
+  </body>
+</html>

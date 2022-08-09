@@ -1,0 +1,844 @@
+openapi: 3.0.0
+info:
+  description: This is to drive discussions about how Apto and Pay Tgthr can communicate
+  version: "0.2.6"
+  title: Alpha Apto <-> Pay Tgthr API
+servers:
+  - url: https://apto.paytgthr.dev
+paths:
+  /v1/{user_id}/transactions:
+    post:
+      x-max-time: 2000ms
+      summary: Transaction Auth
+      description: This is the meat of the systems' interactions. We approve / deny transactions based both on both partner\'s bank account balance.
+      security:
+        - basicAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            description: |
+              This is the `custodian_uid` we send to Apto
+            type: string
+            example: "00000000-0000-0000-0000-000000000000"
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - amount
+                - currency
+                - transaction_id
+                - merchant
+                - idempotency_key
+              properties:
+                type:
+                  description: |
+                    Currently this is always \"debit\"
+                  type: string
+                  enum:
+                    - "debit"
+                amount:
+                  description: |
+                    Amount the transaction is for
+                  type: string
+                  pattern: '^\d+.\d{2}$'
+                  example: "100.02"
+                currency:
+                  description: |
+                    Currently this is always \"USD\", even for foreign transactions
+                  type: string
+                  enum:
+                    - "USD"
+                transaction_id:
+                  $ref: "#/components/schemas/TransactionID"
+                idempotency_key:
+                  $ref: "#/components/schemas/IdempotentKey"
+                merchant:
+                  description: |
+                    String directly from MasterCard
+                  type: string
+                  example: "ABC"
+      responses:
+        "200":
+          description: Approve transaction
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - transaction_id
+                  - idempotency_key
+                  - id
+                properties:
+                  transaction_id:
+                    $ref: "#/components/schemas/TransactionID"
+                  idempotency_key:
+                    $ref: "#/components/schemas/IdempotentKey"
+                  id:
+                    description: |
+                      This is the unique ID of the transaction in Pay Tgthr's systems
+                    type: string
+                    format: uuid
+        "400":
+          description: Malformed request, deny transaction and raise alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIErrors"
+
+        "401":
+          description: Login invalid, deny transaction and raise alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIErrors"
+
+        "403":
+          description: Deny transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIErrors"
+        "404":
+          description: User not found, deny transaction and raise alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIErrors"
+        "500":
+          description: Internal error, deny transaction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIErrors"
+
+  /v1/_health:
+    get:
+      summary: Health check
+      description: Allow a remote server to validate healthy state of service
+      security:
+        - basicAuth: []
+      x-max-time: 2000ms
+      responses:
+        "200":
+          description: Healthy
+          content:
+            plain/text:
+              example: "ok"
+        "401":
+          description: Login invalid
+          content:
+            plain/text:
+              example: "Unauthorized"
+        "500":
+          description: Not healthy
+          content:
+            plain/text:
+              example: "error"
+
+  /ping:
+    get:
+      summary: Connectivity chck
+      responses:
+        "200":
+          description: Healthy
+          content:
+            plain/text:
+              example: "pong"
+
+  /v1/webhook:
+    post:
+      summary: Status Updates
+      description: |
+        Extracted from [https://gist.github.com/shahid-ccs/949fca6fb84f1566ea2dadd0c700e920]()
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  description: "KYC Status Updates"
+                  properties:
+                    cardholder:
+                      $ref: "#/components/schemas/KYCUpdate"
+                - type: object
+                  description: "Card Updates"
+                  properties:
+                    card:
+                      $ref: "#/components/schemas/CardUpdate"
+                - type: object
+                  description: "Daily Settlement"
+                  properties:
+                    settlement:
+                      $ref: "#/components/schemas/SettlementUpdate"
+                - type: object
+                  description: Transaction Updates
+                  properties:
+                    transaction:
+                      $ref: "#/components/schemas/TransactionUpdate"
+      responses:
+        "200":
+          description: Successfully received
+          content:
+            plain/text:
+              example: "ok"
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    TransactionID:
+      description: |
+        This will be stable for one PoS transaction
+      type: string
+      example: "txn_a"
+    IdempotentKey:
+      description: |
+        This is unique to each event/message
+      type: string
+      format: uuid
+    APIErrors:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+              - code
+              - message
+            properties:
+              code:
+                description: |
+                  What error was raised in this request, stable
+                type: string
+                enum:
+                  - "low_balance"
+                  - "balance_check_failed"
+                  - "authorization_failed"
+                  - "malformed_request"
+                  - "unknown_user"
+              message:
+                description: |
+                  Short explanation of error for use by developers during debugging
+                type: string
+                example: "User balance too low"
+    KYCUpdate:
+      type: object
+      properties:
+        livemode:
+          description: |
+            Is this in production?
+          type: boolean
+          example: false
+        id:
+          description: |
+            Id of the cardholder
+          type: string
+          example: "crdhldr_a"
+        email:
+          description: |
+            Email of the cardholder
+          type: string
+          example: "pat@wilson.com"
+        event:
+          description: |
+            Event that caused a state change
+          type: string
+          enum:
+            - "kyc_status_update"
+            - "user_update"
+            - "identity_update"
+        kyc_passed_at:
+          type: string
+          format: date-time
+          example: "2016-10-19T23:20:21.034+00:00"
+        kyc_status:
+          description: |
+            !!!!! | What state the cardholder is in
+          type: string
+          enum:
+            - "PASSED"
+            - "!!!!!"
+          example: "!!!!!"
+        kyc_identity_reason:
+          type: string
+          nullable: true
+          example: "!!!!!"
+        kyc_address_reason:
+          type: string
+          nullable: true
+          example: "!!!!!"
+        kyc_file_reason:
+          type: string
+          nullable: true
+          example: "!!!!!"
+        first_name:
+          type: string
+          example: "Josh"
+        last_name:
+          type: string
+          example: "Wilson"
+        phone:
+          type: number
+          example: 6157915911
+        custodian_uid:
+          description: |
+            This is from Pay Tgthr
+          type: string
+          format: uuid
+          example: "your-external-user-id"
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/Cards"
+        created_at:
+          type: string
+          format: date-time
+          example: "2016-10-19T23:20:17+00:00"
+    Cards:
+      type: object
+      properties:
+        card:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "crd_c7015aecb8a05618"
+            program_id:
+              type: string
+              example: "Apto_GPR"
+            design_key:
+              type: string
+              example: "blue"
+            livemode:
+              type: boolean
+              example: false
+            devices:
+              type: array
+              items:
+                $ref: "#/components/schemas/Device"
+            last_four:
+              type: string
+              example: "5542"
+            status:
+              type: string
+              enum:
+                - "CREATED"
+                - "!!!!!!!"
+              example: "!!!!!!!"
+            activated_at:
+              type: string
+              nullable: true
+              format: date-time
+            created_at:
+              type: string
+              format: date-time
+              example: "2016-10-19T23:20:19+00:00"
+            cardholder_id:
+              type: string
+              example: "crdhldr_a"
+    Device:
+      type: object
+      properties:
+        device:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "Wilson*s iPhone"
+            type:
+              type: string
+              example: "iPhone"
+            status:
+              type: string
+              enum:
+                - "ACTIVE"
+    CardUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "crd_fde2d61d233455b9"
+        program_id:
+          type: string
+          example: "Apto_GPR"
+        design_key:
+          type: string
+          example: "blue"
+        livemode:
+          type: boolean
+          example: true
+        event:
+          type: string
+          enum:
+            - "card_a"
+            - "status_update"
+            - "pin_update"
+            - "card_a"
+          example: "pin_update"
+        devices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Device"
+        last_four:
+          type: string
+          example: "9497"
+        status:
+          type: string
+          enum:
+            - "ACTIVATED"
+            - "!!!!!!!!!"
+          example: "!!!!!!!!!"
+        dda_number:
+          type: string
+          description: |
+            DDA represents Direct Deposit account number that is used to deposit funds directly on the card through banking channel
+          example: "9990000267938"
+        aba_routing_number:
+          type: string
+          description: |
+            ABA is the routing number which identifies the bank used for the same purpose
+          example: "121182810"
+        activated_at:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2016-09-27T01:46:32+00:00"
+        created_at:
+          type: string
+          format: date-time
+          example: "2016-09-27T00:54:09+00:00"
+        cardholder_id:
+          type: string
+          example: "crdhldr_a"
+    SettlementUpdate:
+      type: object
+      properties:
+        livemode:
+          type: boolean
+        id:
+          type: string
+          example: "stlmnt_5hfi35"
+        date:
+          type: string
+          format: date-time
+          example: "2016-05-24T16:36:24+00:00"
+        total_balance_due:
+          type: number
+          example: 56943.05
+        period_balance_due:
+          type: number
+          example: 6281.39
+        csv_url:
+          type: string
+          example: "https://example.aptopayments.com/settlements/stlmnt_5hfi35"
+    TransactionUpdate:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/TransactionID"
+        idempotency_key:
+          description: |
+            !!!!! | Unique key for ?? Can this be null?
+          type: string
+          nullable: true
+        state:
+          description: |
+            !!!!! | What is formatting, in email these are all caps
+          type: string
+          enum:
+            - "pending"
+            - "declined"
+            - "complete"
+          nullable: false
+        type:
+          description: |
+            !!!!! | What is formatting, in email these are all caps
+
+            ## Possible states 
+            Along with `state` these define what "state" the transaction is in
+
+            | `state`  | `type`          | description |
+            | :---     | :---            | :---        |
+            | pending  | pending         | |
+            | pending  | reversal        | |
+            | pending  | purchase        | |
+            | pending  | pin_purchase    | |
+            | pending  | refund          | |
+            | pending  | decline         | |
+            | pending  | balance_unquiry | |
+            | pending  | withdrawal      | |
+            | pending  | credit          | |
+            | pending  | debit           | |
+            | pending  | non_financial   | |
+            | pending  | unsupported     | |
+            | -------- |
+            | declined | pending         | *impossible* |
+            | declined | reversal        | |
+            | declined | purchase        | |
+            | declined | pin_purchase    | |
+            | declined | refund          | |
+            | declined | decline         | |
+            | declined | balance_unquiry | |
+            | declined | withdrawal      | |
+            | declined | credit          | |
+            | declined | debit           | |
+            | declined | non_financial   | |
+            | declined | unsupported     | |
+            | -------- |
+            | complete | pending         | *impossible* |
+            | complete | reversal        | Reversal from merchant, refund for example |
+            | complete | purchase        | |
+            | complete | pin_purchase    | |
+            | complete | refund          | |
+            | complete | decline         | |
+            | complete | balance_unquiry | |
+            | complete | withdrawal      | |
+            | complete | credit          | |
+            | complete | debit           | |
+            | complete | non_financial   | |
+            | complete | unsupported     | |
+
+            ## Scenarios
+
+            ### Happy path -- Restaurant w/tip
+
+            | Event                     | `state`  | `type`   | Amount |
+            | ---                       | ---      | ---      | ---    |
+            | card used at PoS & authed | pending  | purchase | $100   |
+            | netowrk complete msg      | complete | purchase | $110   |
+
+            ### Happy path -- Hotel example
+
+            | Event                          | `state`  | `type`   | Amount |
+            | ---                            | ---      | ---      | ---    |
+            | card used at PoS & authed      | pending  | purchase | $200   |
+            | netowrk complete msg (partial) | complete | purchase | $50    |
+
+            ### Transaction denied
+
+            | Event                      | `state`  | `type`   |
+            | ---                        | ---      | ---      |
+            | card dipped & denied by PT | declined | purchase |
+
+            ### Apto Detect Fraud (no sync to Pay Tgthr)
+
+            | Event                        | `state`  | `type`   |
+            | ---                          | ---      | ---      |
+            | card dipped & denied by Apto | declined | purchase |
+
+            ### Dispute
+
+            | Event                     | `state`  | `type`   |
+            | ---                       | ---      | ---      |
+            | card used at PoS & authed | pending  | purchase | $100   |
+            | network complete msg      | complete | purchase | $110   |
+            | customer disputes         | complete | ???
+
+            ### Refund -- Complete
+
+            | Event                     | `state`  | `type`   |
+            | ---                       | ---      | ---      |
+            | card used at PoS & authed | pending  | purchase | $100   |
+            | network complete msg      | complete | purchase | $110   |
+            | merchant refund           | complete | refund   |
+
+            ### Refund -- Partial
+
+            | Event                     | `state`  | `type`   |
+            | ---                       | ---      | ---      |
+            | card used at PoS & authed | pending  | purchase | $100   |
+            | network complete msg      | complete | purchase | $110   |
+            | merchant refund           | complete | refund   |
+
+             ### Reversal
+
+            | Event                     | `state`  | `type`   |
+            | ---                       | ---      | ---      |
+            | card used at PoS & authed | pending  | purchase | $100   |
+            | merchant reversal         | complete | reversal |
+
+             ### Reversal
+
+            | Event                     | `state`  | `type`     |
+            | ---                       | ---      | ---        |
+            | card used at ATM & authed | complete | withdrawal | $100   |
+            | merchant reversal         | complete | reversal   |
+
+            ### Any more??
+
+          type: string
+          enum:
+            - "pending"
+            - "reversal"
+            - "purchase"
+            - "pin_purchase"
+            - "refund"
+            - "decline"
+            - "balance_unquiry"
+            - "withdrawal"
+            - "credit"
+            - "debit"
+            - "non_financial"
+            - "unsupported"
+          nullable: false
+        adjustments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Adjustment"
+          nullable: false
+        balances:
+          type: array
+          items:
+            $ref: "#/components/schemas/Balance"
+          nullable: false
+        local_amount:
+          description: |
+            In the local currency
+          type: object
+          properties:
+            currency:
+              type: string
+              enum:
+                - "USD"
+            amount:
+              type: number
+              example: "0.00"
+          nullable: false
+        hold_amount:
+          description: |
+            This is for the auth
+          type: object
+          properties:
+            currency:
+              type: string
+              enum:
+                - "USD"
+            amount:
+              type: number
+              example: "0.00"
+          nullable: false
+        billing_amount:
+          description: |
+            This is what we bill the users and we get billed
+          type: object
+          properties:
+            currency:
+              type: string
+              enum:
+                - "USD"
+            amount:
+              type: number
+              example: "0.00"
+          nullable: false
+        cashback_amount:
+          description: |
+            This is the cashback at PoS
+          type: object
+          properties:
+            currency:
+              type: string
+              enum:
+                - "USD"
+            amount:
+              type: number
+              example: "0.00"
+          nullable: false
+        fee_amount:
+          description: |
+            Any fees for this trx
+          type: object
+          properties:
+            currency:
+              type: string
+              enum:
+                - "USD"
+            amount:
+              type: number
+              example: "0.00"
+          nullable: false
+        cardholder_id:
+          description: ""
+          type: string
+          example: "crdhldr_a"
+          nullable: false
+        created_at:
+          description: ""
+          type: string
+          format: date-time
+          example: "2016-10-19T23:25:17+00:00"
+          nullable: false
+        cardholder_email:
+          type: string
+          format: email
+          example: "pat@wilson.com"
+          nullable: false
+        cardholder_first_name:
+          type: string
+          example: "Josh"
+          nullable: false
+        cardholder_last_name:
+          type: string
+          example: "Wilson"
+          nullable: false
+        card_id:
+          type: string
+          example: "crd_c7015aecb8a05618"
+          nullable: false
+        card_present:
+          description: |
+            Was the card present at the PoS during the transaction
+          type: boolean
+          example: true
+          nullable: false
+        description:
+          description: "!!!!!"
+          type: string
+          nullable: true
+        mcc:
+          description: |
+            The mastercard category code for the merchant
+          type: string
+          example: "7299"
+          nullable: false
+        mcc_name:
+          description: "!!!!!"
+          type: string
+          nullable: true
+        mcc_group:
+          description: |
+            The human readable name of the MCC group
+          type: string
+          example: "Food and Beverage"
+          nullable: false
+        merchant_name:
+          description: |
+            !!!!!|  What formatting is done here?
+          type: string
+          example: LORDS PHARMACY LTD
+          nullable: false
+        merchant_locality:
+          description: |
+            !!!!! | How's this different from `merchant.locality`
+          type: string
+          example: "LONDON"
+          nullable: false
+        merchant_region:
+          description: |
+            !!!!! | How's this different from `merchant.region`
+          type: string
+          nullable: true
+        merchant_country:
+          description: |
+            !!!!! | Is this ISO 3166-1 alpha-3?
+          type: string
+          format: "ISO 3166-1 alpha-3"
+          example: "GBR"
+          nullable: false
+        context:
+          description: |
+            !!!!! | What is this? Format?
+          type: string
+          example: "PIN purchase (VISA, Signature)"
+          nullable: false
+        local_currency:
+          description: |
+            !!!!! | Is this ISO 4217?
+          type: string
+          format: "ISO 4217"
+          example: "EUR"
+          nullable: false
+        local_currency_code:
+          description: |
+            The ISO 4217 currency code [https://en.wikipedia.org/wiki/ISO_4217#Currency_numbers]()
+          type: string
+          format: "ISO 4217"
+          example: "978"
+          nullable: false
+        ecommerce:
+          description: |
+            !!!!!
+          type: boolean
+          example: false
+          nullable: false
+        international:
+          description: |
+            Was this card used outside its domestic area (oUS)
+          type: boolean
+          example: false
+          nullable: false
+        emv:
+          description: |
+            Was the emv chip used vs the mag stripe
+          type: boolean
+          example: false
+          nullable: false
+        network:
+          description: |
+            Payment network used to process transaction
+          type: string
+          example: "VISA"
+          nullable: false
+        shift_stand_in:
+          description: |
+            Did shift make an authorization decision without calling auth endpoint
+          type: boolean
+          example: false
+          nullable: false
+        dispute_id:
+          description: |
+            !!!!! | Unique id when the card holder files a dispute
+          type: string
+          nullable: true
+        dispute_at:
+          description: |
+            !!!!! | When a dispute was initiated
+          type: string
+          format: date-time
+          nullable: true
+        dispute_won_at:
+          description: |
+            !!!!! | When a dispute was won
+          type: string
+          format: date-time
+          nullable: true
+        dispute_lost_at:
+          description: |
+            !!!!! | When a dispute was lost
+          type: string
+          format: date-time
+          nullable: true
+        funding_source_name:
+          description: |
+            !!!!!
+          type: string
+          example: "BTC Wallet"
+          nullable: false
+        livemode:
+          type: boolean
+          example: false
+          nullable: false
+    Adjustment:
+      type: object
+      properties:
+        adjustment:
+          type: object
+    Balance:
+      type: object
+      properties:
+        balance:
+          type: object
+security:
+  - basicAuth: []

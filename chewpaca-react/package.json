@@ -1,0 +1,137 @@
+{
+  "name": "chewpaca-react",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@craco/craco": "^6.2.0",
+    "@fontsource/rubik": "^4.5.0",
+    "@headlessui/react": "^1.4.0",
+    "@heroicons/react": "^1.0.4",
+    "@tailwindcss/aspect-ratio": "^0.3.0",
+    "@tailwindcss/forms": "^0.3.3",
+    "@tailwindcss/typography": "^0.4.1",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "@types/jest": "^26.0.15",
+    "@types/lodash": "^4.14.176",
+    "@types/node": "^12.0.0",
+    "@types/react": "^17.0.0",
+    "@types/react-csv": "^1.1.2",
+    "@types/react-dom": "^17.0.0",
+    "@types/react-helmet": "^6.1.2",
+    "@visx/curve": "^2.1.0",
+    "@visx/react-spring": "^2.4.0",
+    "@visx/visx": "^2.5.0",
+    "@visx/xychart": "^2.5.0",
+    "autoprefixer": "^9",
+    "axios": "^0.24.0",
+    "date-fns": "^2.26.0",
+    "lodash": "^4.17.21",
+    "postcss": "^7",
+    "react": "^17.0.2",
+    "react-csv": "^2.2.1",
+    "react-dom": "^17.0.2",
+    "react-helmet": "^6.1.0",
+    "react-query": "^3.29.0",
+    "react-router-dom": "^6.0.2",
+    "react-scripts": "4.0.3",
+    "react-spring": "^9.2.0",
+    "react-table": "^7.7.0",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat",
+    "tiny-async-pool": "^1.2.0",
+    "typescript": "^4.1.2",
+    "typescript-eslint": "^0.0.1-alpha.0",
+    "web-vitals": "^1.0.1"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "craco eject",
+    "build:move": "cp -R build/* ../chewpaca/public"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaFeatures": {
+        "jsx": true
+      },
+      "project": "tsconfig.json"
+    },
+    "plugins": [
+      "@typescript-eslint",
+      "react-hooks",
+      "react"
+    ],
+    "extends": [
+      "react-app",
+      "react-app/jest",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    ],
+    "rules": {
+      "no-case-declarations": "warn",
+      "no-undef": "error",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ],
+      "@typescript-eslint/no-var-requires": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-misused-promises": [
+        "error",
+        {
+          "checksVoidReturn": false
+        }
+      ],
+      "react/no-unescaped-entities": "off",
+      "sort-imports": [
+        "warn",
+        {
+          "ignoreCase": false,
+          "ignoreMemberSort": false,
+          "allowSeparatedGroups": true,
+          "ignoreDeclarationSort": true
+        }
+      ],
+      "@typescript-eslint/no-unsafe-member-access": "warn",
+      "@typescript-eslint/no-unsafe-call": "warn",
+      "@typescript-eslint/no-unsafe-return": "warn"
+    },
+    "globals": {
+      "FormData": "readonly",
+      "fetch": "readonly",
+      "setTimeout": "readonly",
+      "console": "readonly",
+      "Response": "readonly",
+      "JSX": "readonly",
+      "require": "readonly",
+      "module": "readonly",
+      "setInterval": "readonly",
+      "clearInterval": "readonly",
+      "clearTimeout": "readonly"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "reactSnap": {
+    "skipThirdPartyRequests": true
+  },
+  "devDependencies": {
+    "@types/tiny-async-pool": "^1.0.0"
+  }
+}

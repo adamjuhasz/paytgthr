@@ -1,0 +1,8 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "landing-page:lib"
+    - path: "./test"
+      component: "landing-page:test:landing-page-test"
+    - path: "./app"
+      component: "landing-page:exe:landing-page-exe"

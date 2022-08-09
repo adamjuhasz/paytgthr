@@ -1,0 +1,6 @@
+.stack-work/
+accounts-fsm.cabal
+*~
+
+#secrts
+.env

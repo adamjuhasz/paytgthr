@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Error</title>
+  <meta name="theme-color" content="#e780bb">
+  {{> head}}
+</head>
+
+<body class="pink">
+  <div class="app-frame framer background pink">
+    <div class="side-menu">
+      <div class="sidebar-header">
+        <a href="/"><img src="/images/paytgthr.svg" alt="pay tgthr logo"></img></a>
+      </div>
+      <div class="side-list"></div>
+    </div>
+    <div class="main-content column-stack">
+      <div class="content-header">
+        <a class="back-button" href="/">
+          <img class="back-chevron" src="/images/arrow-back.svg">
+          <div class="back-text font-small">Home</div>
+        </a>
+      </div>
+      <div class="content-frame center-flex-column">
+        <h2>Can't find that</h2>
+        <p style="text-align: center;">
+          You've tried going somewhere, we just don't know where you wanted to go
+        </p>
+      </div>
+      <div class="button-frame">
+        <a class="no-underline" href="/">
+          <div class="primary button">Go Home</div>
+        </a>
+      </div>
+    </div>
+  </div>
+  {{> footer-signup}}
+  {{> footer-all}}
+  <script>
+    try {
+      analytics.track("Page Error 404");
+    } catch(e) {
+      console.error(e);
+    }
+  </script>
+</body>
+
+</html>

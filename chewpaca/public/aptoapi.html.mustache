@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li><a href="/">Chewpaca</a></li>
+          <li class="is-active"><a href="#" aria-current="page">Messages</a></li>
+        </ul>
+      </nav>
+      <section class="section">
+        <table class="table is-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>key</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#msgs}}
+              <tr>
+                <th class="is-family-code"><a href="/message?id={{mmrMsgId}}&from=/messages%3Foffset%3D{{current}}">{{mmrMsgId}}</a></th>
+                <td>{{mmrKey}}</td>
+                <td>{{mmrTimestamp}}</td>
+              </tr>
+            {{/msgs}}
+          </tbody>
+        </table>
+        <a href="/messages?offset={{next}}">Next</a>
+      </section>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+.stack-work/
+auditor.cabal
+*~
+
+#secrets
+.env
+psql_conn_string
+amqp_conn_string

@@ -1,0 +1,110 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.css"
+    crossorigin="anonymous">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    const runGC = () => {
+      var form = new FormData();
+      return fetch('/send/runledgergc', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+
+    const refreshBalances = () => {
+      var form = new FormData();
+      return fetch('/send/runactivebalances', {
+        method: 'POST',
+        credentials: 'same-origin',
+        cache: 'no-cache',
+        redirect: 'follow',
+        body: form
+      })
+        .then(() => {
+          location.reload(true);
+        });
+    }
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+      <ul>
+        <li class="is-active"><a href="#" aria-current="page">Chewpaca</a></li>
+      </ul>
+    </nav>
+    <div class="tile is-ancestor">
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <p><a href="/messages?offset=0">
+              <h2>Messages</h2>
+            </a></p>
+        </article>
+      </div>
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <p><a href="/users">
+              <h2>Users</h2>
+            </a></p>
+        </article>
+      </div>
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <p><a href="/groups">
+              <h2>Groups</h2>
+            </a></p>
+        </article>
+      </div>
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <p><a href="/group/new">
+              <h2>New Group</h2>
+            </a></p>
+        </article>
+      </div>
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <p><a href="/api/apto?offset=0">
+              <h2>Apto API</h2>
+            </a></p>
+        </article>
+      </div>
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <p><a href="/transactions">
+              <h2>Transactions</h2>
+            </a></p>
+        </article>
+      </div>
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <p><a href="/payments">
+              <h2>Payments</h2>
+            </a></p>
+        </article>
+      </div>
+    </div>
+    <div class="tile is-ancestor">
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <button class="button is-danger" onClick="runGC()">GC Ledger</button>
+        </article>
+      </div>
+      <div class="tile is-parent">
+        <article class="tile is-child notification is-primary">
+          <button class="button is-danger" onClick="refreshBalances()">Refresh active Balances</button>
+        </article>
+      </div>
+    </div>
+  </div>
+</body>
+<html>

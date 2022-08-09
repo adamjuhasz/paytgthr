@@ -1,0 +1,91 @@
+name: auditor
+version: 0.1.0.0
+github: "paytgthr/monorepo"
+license: AllRightsReserved
+author: "Author name here"
+maintainer: "hi@paytgthr.com"
+copyright: "2019 Pay Tgthr, Inc"
+
+description: Please see the README
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - amqp
+  - base64-bytestring
+  - bytestring
+  - case-insensitive
+  - connection
+  - cryptonite
+  - ekg
+  - ekg-core
+  - fast-logger
+  - http2
+  - http-client
+  - http-client-tls
+  - http-types
+  - jwt
+  - lifted-base
+  - load-env
+  - mtl
+  - once
+  - postgresql-simple
+  - pretty-simple
+  - random
+  - resource-pool
+  - retry
+  - servant
+  - servant-client
+  - servant-client-core
+  - servant-server
+  - text
+  - time
+  - transformers
+  - unix
+  - unordered-containers
+  - uuid
+  - vault
+  - vector
+  - wai
+  - wai-extra
+  - warp
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
+
+default-extensions:
+  - OverloadedStrings
+  - ScopedTypeVariables
+  - DuplicateRecordFields
+  - StrictData
+
+library:
+  source-dirs:
+    - src
+    - ../shared-haskell/lib
+
+executables:
+  auditor-exe:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - auditor
+
+tests:
+  auditor-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - auditor

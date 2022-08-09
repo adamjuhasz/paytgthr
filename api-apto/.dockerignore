@@ -1,0 +1,17 @@
+.stack-work/
+landing-page.cabal
+*~
+*.hp
+*.prof
+
+cloudbuild.yaml
+.gitignore
+k8s.yaml
+
+#secrets
+.env
+amqp_conn_string
+psql_conn_string
+plaid_base_url
+plaid_client_id
+plaid_secret

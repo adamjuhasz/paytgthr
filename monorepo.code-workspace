@@ -1,0 +1,65 @@
+{
+  "folders": [
+    {
+      "path": "accounts-fsm"
+    },
+    {
+      "path": "alfie"
+    },
+    {
+      "path": "api-apto"
+    },
+    {
+      "path": "api-dwolla"
+    },
+    {
+      "path": "api-privacy"
+    },
+    {
+      "path": "auditor"
+    },
+    {
+      "path": "chewpaca"
+    },
+    {
+      "path": "chewpaca-react"
+    },
+    {
+      "path": "integration_tests"
+    }
+    {
+      "path": "landing-page"
+    },
+    {
+      "path": "landing-page-react"
+    },
+    {
+      "path": "mailer"
+    },
+    {
+      "path": "mock-apto-api"
+    },
+    {
+      "path": "mock-dwolla-api"
+    },
+    {
+      "path": "payment-auth"
+    },
+    {
+      "path": "shared-haskell"
+    },
+    {
+      "path": "docs"
+    },
+    {
+      "path": "dockerfiles"
+    },
+    {
+      "path": "infrastructure"
+    },
+    {
+      "path": "templates"
+    },
+  ],
+  "settings": {}
+}

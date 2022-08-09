@@ -1,0 +1,63 @@
+steps:
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    id: "Build Info"
+    waitFor: ["-"]
+    args:
+      - "-c"
+      - |
+        # File that contains failures.
+        echo "repo: $REPO_NAME"
+        echo "branch: $BRANCH_NAME"
+        echo "sha: ${COMMIT_SHA}"
+        echo "ssha: $SHORT_SHA"
+        echo "tag: ${TAG_NAME}"
+        echo "rev: $REVISION_ID"
+        echo "build: $BUILD_ID"
+        echo "pr: $_PR_NUMBER"
+        echo "project: $_PROJECT"
+        echo "source: $_SOURCE_LOC"
+        echo "last commit: $_CACHE_SHA"
+  # Linting
+  - name: "gcr.io/kaniko-project/executor:latest"
+    id: "Lint"
+    waitFor: ["-"]
+    args:
+      - --cache=true
+      - --no-push
+      - --cache-repo=us.gcr.io/$PROJECT_ID/haskell-lint/cache
+      - --cache-ttl=2160h
+      - --destination=us.gcr.io/$PROJECT_ID/haskell-lint:latest
+      - --dockerfile=$_SOURCE_LOC/../dockerfiles/lint.dockerfile
+      - --build-arg=sourcedir=$_SOURCE_LOC
+  # Formatting
+  - name: "gcr.io/kaniko-project/executor:latest"
+    id: "Formatter"
+    args:
+      - --cache=true
+      - --no-push
+      - --cache-repo=us.gcr.io/$PROJECT_ID/haskell-formatter/cache
+      - --cache-ttl=2160h
+      - --destination=us.gcr.io/$PROJECT_ID/haskell-formatter:latest
+      - --dockerfile=$_SOURCE_LOC/../dockerfiles/format.dockerfile
+      - --build-arg=sourcedir=$_SOURCE_LOC
+  ## Actual building
+  - name: "gcr.io/kaniko-project/executor:latest"
+    id: run-stage
+    waitFor: ["-"]
+    args:
+      - --cache=true
+      - --cache-ttl=2160h
+      - --snapshotMode=redo
+      - --registry-mirror=mirror.gcr.io
+      - --destination=us.gcr.io/$PROJECT_ID/$_PROJECT:${BRANCH_NAME}
+      - --destination=us.gcr.io/$PROJECT_ID/$_PROJECT:${SHORT_SHA}
+      - --destination=us.gcr.io/$PROJECT_ID/$_PROJECT:${COMMIT_SHA}
+      - --dockerfile=$_SOURCE_LOC/../dockerfiles/debian-profile-lts-17-10.dockerfile
+      - --build-arg=sourcedir=$_SOURCE_LOC
+      - --target=run-stage
+timeout: 7200s
+substitutions:
+  _SOURCE_LOC: "."
+options:
+  machineType: "E2_HIGHCPU_8"

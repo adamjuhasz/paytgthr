@@ -1,0 +1,9 @@
+# https://github.com/mpickering/hie-bios#stack
+cradle:
+  stack:
+    - path: "./lib"
+      component: "shared:lib"
+    - path: "./test"
+      component: "shared:test:shared-test"
+    - path: "./app"
+      component: "shared:exe:shared-exe"

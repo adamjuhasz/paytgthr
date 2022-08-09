@@ -1,0 +1,71 @@
+{
+  "name": "landing-page-react",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@alex-drocks/react-snap-sitemap": "^3.0.0",
+    "@craco/craco": "^6.2.0",
+    "@fontsource/rubik": "^4.5.0",
+    "@headlessui/react": "^1.4.0",
+    "@heroicons/react": "^1.0.4",
+    "@tailwindcss/aspect-ratio": "^0.3.0",
+    "@tailwindcss/forms": "^0.3.3",
+    "@tailwindcss/typography": "^0.4.1",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "@types/jest": "^26.0.15",
+    "@types/lodash": "^4.14.176",
+    "@types/node": "^12.0.0",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@types/react-helmet": "^6.1.2",
+    "@types/react-router-dom": "^5.3.1",
+    "autoprefixer": "^9",
+    "axios": "^0.24.0",
+    "firebase": "^9.5.0",
+    "lodash": "^4.17.21",
+    "nanoid": "^3.1.30",
+    "postcss": "^7",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-helmet": "^6.1.0",
+    "react-router-dom": "^5.3.0",
+    "react-scripts": "4.0.3",
+    "react-snap": "^1.23.0",
+    "smartquotes": "^2.3.2",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat",
+    "typescript": "^4.1.2",
+    "web-vitals": "^1.0.1"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "craco eject",
+    "postbuild": "react-snap",
+    "build:sitemap": "react-snap-sitemap --base-url=https://paytgthr.com/",
+    "build:move": "mv build/index.html build/homepage.html && cp -R build/* ../landing-page/public"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "reactSnap": {
+    "skipThirdPartyRequests": true
+  }
+}
